@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Midway — a carnival for dead bags
 
-## Getting Started
+Bury rugged Solana tokens, take your SOL rent back, and every real loss is a ticket to the nightly draw.
+The Barker (the rabbit) reads the bags you still hold and tells you which one is closest to zero.
 
-First, run the development server:
+One screen, five acts: **Gate → Reading → Ledger → Burial → Stub**.
+
+## What it does
+
+| Piece | How |
+|---|---|
+| **Scan** | `getTokenAccountsByOwner` for SPL + Token-2022 via Helius; markets from Jupiter Tokens v2, DexScreener as fallback. Held NFTs are skipped. |
+| **Classify** | `RUGGED` (no market / pool < $500), `DUST` (< $1), `EMPTY` (0 balance) are buryable. `FROZEN`, `STUCK`, `PROTECTED` are never offered. |
+| **Deathwatch** | `lib/deathwatch.ts` — a transparent 0–100 Death Clock from pool depth & bleed, price, holder exodus, sell pressure, volume collapse, top-holder share, live mint/freeze authority, dev bag, serial launcher, organic score. Every point maps to a named symptom. |
+| **The Barker** | `/api/barker` streams his line. With `ANTHROPIC_API_KEY` Claude writes it from the facts; without, a templated line streams the same way. |
+| **Burn** | Built client-side (`lib/burn.ts`): `burnChecked` + `closeAccount` per bag, ≤ 7 per tx, a `MIDWAY` memo, and the pot cut as a SOL transfer. User signs everything. |
+| **Record** | `/api/burn/record` re-reads every signature from chain and only trusts what it proves (signer, memo, closes, pot cut). |
+| **Tickets** | `lib/tickets.ts` — 0 for empty accounts and your own launches; the token must prove a real market (≥ 50 holders or a ≥ 0.01 SOL buy); loss adds weight on a log scale (max 3×); 25 per wallet per night. |
+| **Draw** | Nightly at `DRAW_HOUR_UTC` (18:00 UTC = 21:00 MSK) by Vercel cron → `/api/draw/run`. Seed = a finalized blockhash after close; `sha256(seed) mod tickets` over entrants sorted by address — anyone can re-run it. Pays automatically if `DRAW_PAYOUT_SECRET` is set. Empty nights roll over. |
+| **Rap sheet** | `/api/rapsheet?q=` — paste a token or deployer: launches/migrations from Jupiter + everything of theirs buried on Midway. |
+| **Stub** | `/r/[id]` with a generated OG card so shared stubs unfurl on X. |
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # fill HELIUS_API_KEY at minimum
+npm install
+npm run dev                  # http://localhost:3000  ·  /?demo=1 walks the demo lot
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without `DATABASE_URL` everything lands in `/tmp/midway-store.json` (dev only). On Vercel, attach Neon and the tables create themselves.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Before mainnet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Set `NEXT_PUBLIC_POT_WALLET` to a dedicated wallet. Without it, burns still work but no cut is taken and no tickets have a pot behind them.
+- Keep `vercel.json`'s cron minute in step with `NEXT_PUBLIC_DRAW_HOUR_UTC`, and set `CRON_SECRET`.
+- A prize draw with entry tied to activity may be regulated where your users live. Check before you promote it.
 
-## Learn More
+## Art
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`public/art/banner.webp` is the Midway banner; the Barker's eyes in `components/Stage.tsx` are measured off it (1657×914). If you swap the art, re-measure `EYES` and `LAMP`.
