@@ -75,7 +75,7 @@ export function Graveyard({ open, onClose, data }: { open: boolean; onClose: () 
             </nav>
             <div className="ink-rule" />
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            <div className="scroll-ink fade-y min-h-0 flex-1 overflow-y-auto px-4 py-3">
               {tab === "fresh" ? (
                 data?.recent.length ? (
                   data.recent.map((b, i) => (

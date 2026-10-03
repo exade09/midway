@@ -19,7 +19,7 @@ export function Ticker({ feed }: { feed: Burial[] }) {
         <span key="b" className="whitespace-nowrap text-ash-2">✝ Paste any token into the Barker&apos;s rap sheet to see what its deployer has buried before.</span>,
       ];
   return (
-    <div className="relative z-20 overflow-hidden border-t border-bone/10 bg-ink-0/70 py-2.5 font-type text-[12px] tracking-wide backdrop-blur-sm">
+    <div className="ticker-mask relative z-20 overflow-hidden border-t border-bone/10 bg-ink-0/70 py-2.5 font-type text-[12px] tracking-wide backdrop-blur-sm">
       <div className="flex w-max animate-marquee gap-12 pr-12">
         {items}
         {items.map((it, i) => (

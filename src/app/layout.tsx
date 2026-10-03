@@ -14,9 +14,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Midway — hand over a dead bag",
     description: "Bury rugged tokens. Get your rent back. Win tonight's pot.",
-    images: [{ url: "/art/og-base.jpg", width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", site: `@${X_HANDLE}`, images: ["/art/og-base.jpg"] },
+  twitter: { card: "summary_large_image", site: `@${X_HANDLE}` },
 };
 
 export const viewport: Viewport = { themeColor: "#050505", width: "device-width", initialScale: 1 };

@@ -9,6 +9,7 @@ import { hms, short, sol } from "@/lib/format";
 import { sound } from "@/lib/sound";
 import { TOKEN_CA, X_HANDLE, X_URL } from "@/lib/config";
 import { toast } from "@/lib/toast";
+import { RollingClock, Ticker } from "./Polish";
 import { ease } from "@/lib/motion";
 
 export function useNow(period = 1000) {
@@ -57,7 +58,7 @@ export function TopBar({
         <div className="hidden items-center gap-5 lg:flex xl:gap-6">
           <Meter k="Tonight's pot">
             <span className="text-brass" style={{ textShadow: "0 0 18px rgba(201,166,90,.35)" }}>
-              ◎ {draw ? sol(draw.potLamports, 3) : "—"}
+              ◎ {draw ? <Ticker value={draw.potLamports} format={(n) => sol(n, 3)} duration={1.6} /> : "—"}
             </span>
           </Meter>
           <div className="h-9 w-px bg-bone/10" />
@@ -67,13 +68,13 @@ export function TopBar({
               animate={lastHour ? { opacity: [1, 0.55, 1] } : { opacity: 1 }}
               transition={lastHour ? { duration: 1, repeat: Infinity } : {}}
             >
-              {left != null ? hms(left) : "--:--:--"}
+              {left != null ? <RollingClock text={hms(left)} /> : "--:--:--"}
             </motion.span>
           </Meter>
           <div className="hidden h-9 w-px bg-bone/10 xl:block" />
           <div className="hidden xl:block">
             <Meter k="Tickets">
-              <span className="text-ash-2">{draw ? Math.round(draw.ticketsTotal).toLocaleString("en-US") : "—"}</span>
+              <span className="text-ash-2">{draw ? <Ticker value={draw.ticketsTotal} format={(n) => Math.round(n).toLocaleString("en-US")} /> : "—"}</span>
             </Meter>
           </div>
         </div>

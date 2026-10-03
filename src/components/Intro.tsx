@@ -18,7 +18,7 @@ export function Intro({ onEnter }: { onEnter: () => void }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-ink-0/90"
-      exit={{ opacity: 0, transition: { duration: 1.2, ease: ease.inOut } }}
+      exit={{ opacity: 0, transition: { duration: 1.3, delay: 0.25, ease: ease.inOut } }}
     >
       <div className="relative px-6 text-center">
         <DarkEyes />
@@ -28,7 +28,10 @@ export function Intro({ onEnter }: { onEnter: () => void }) {
           animate={{ opacity: ready ? 1 : 0.15, scaleX: 1 }}
           transition={{ duration: 1.4, ease: ease.out }}
         />
-        <h1 className="flex justify-center gap-[0.04em] font-display text-[clamp(64px,13vw,184px)] leading-none tracking-[0.02em]">
+        <motion.h1
+          className="flex justify-center gap-[0.04em] font-display text-[clamp(64px,13vw,184px)] leading-none tracking-[0.02em]"
+          exit={{ y: -36, scale: 1.06, opacity: 0, filter: "blur(10px)", transition: { duration: 1.1, ease: [0.65, 0, 0.35, 1] } }}
+        >
           {WORD.map((ch, i) => (
             <motion.span
               key={i}
@@ -43,7 +46,7 @@ export function Intro({ onEnter }: { onEnter: () => void }) {
               {ch}
             </motion.span>
           ))}
-        </h1>
+        </motion.h1>
         <motion.p
           className="mt-5 font-serif text-[clamp(18px,2.2vw,26px)] italic text-ash-2"
           initial={{ opacity: 0, y: 8 }}

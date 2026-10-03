@@ -5,12 +5,14 @@ import { useEffect, useRef } from "react";
  * Ash drifting down across the lot, and moths circling the lamp.
  * `lamp` is the lamp's position as fractions of this canvas; `heat` makes the moths frantic.
  */
-export function Particles({ lamp, heat = 0 }: { lamp: { x: number; y: number }; heat?: number }) {
+export function Particles({ lamp, heat = 0 }: { lamp: { x: number; y: number | ((h: number) => number) }; heat?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const heatRef = useRef(heat);
+  const lampRef = useRef(lamp);
   useEffect(() => {
     heatRef.current = heat;
-  }, [heat]);
+    lampRef.current = lamp;
+  }, [heat, lamp]);
 
   useEffect(() => {
     const c = ref.current!;
@@ -48,12 +50,13 @@ export function Particles({ lamp, heat = 0 }: { lamp: { x: number; y: number }; 
         ctx.fill();
       }
       // Moths
-      const lx = lamp.x * w, ly = lamp.y * h;
+      const L = lampRef.current;
+      const lx = L.x * w, ly = typeof L.y === "function" ? L.y(h) : L.y * h;
       const frantic = 1 + heatRef.current * 2.5;
       for (const m of moths) {
         m.a += 0.0011 * m.sp * frantic * dt;
         m.wob += 0.009 * dt;
-        const rr = m.r * w * (1 + 0.25 * Math.sin(m.wob));
+        const rr = Math.min(70, m.r * w) * (1 + 0.25 * Math.sin(m.wob));
         const x = lx + Math.cos(m.a) * rr;
         const y = ly + Math.sin(m.a * 1.3) * rr * 0.6 + rr * 0.15;
         const g = ctx.createRadialGradient(x, y, 0, x, y, 5);
@@ -77,7 +80,7 @@ export function Particles({ lamp, heat = 0 }: { lamp: { x: number; y: number }; 
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [lamp.x, lamp.y]);
+  }, []);
 
   return <canvas ref={ref} aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" />;
 }

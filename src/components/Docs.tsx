@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { MotionConfig, motion, useScroll, useSpring } from "motion/react";
+import { PanelGlow } from "./Polish";
 import { Stage } from "./Stage";
 import { ContractPill } from "./TopBar";
 import { Toasts } from "./Toasts";
@@ -28,7 +29,19 @@ const msk = (DRAW_HOUR_UTC + 3) % 24;
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export function Docs() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <PanelGlow />
+      <DocsBody />
+    </MotionConfig>
+  );
+}
+
+function DocsBody() {
   const [active, setActive] = useState<string>("what");
+  const scroller = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ container: scroller });
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
 
   useEffect(() => {
     const els = CHAPTERS.map(([id]) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
@@ -44,11 +57,12 @@ export function Docs() {
   }, []);
 
   return (
-    <div className="relative h-dvh overflow-y-auto scroll-smooth" id="docs-scroll">
+    <div ref={scroller} className="scroll-ink relative h-dvh overflow-y-auto scroll-smooth" id="docs-scroll">
       <Stage phase="receipt" mood="idle" />
       <Toasts />
 
       <header className="sticky top-0 z-30 border-b border-bone/[.07] bg-ink-0/70 backdrop-blur-md">
+        <motion.div aria-hidden className="absolute inset-x-0 bottom-[-1px] h-px origin-left bg-lamp shadow-[0_0_10px_var(--color-lamp)]" style={{ scaleX: progress }} />
         <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-3 px-5 py-3.5">
           <Link href="/" className="group flex items-center gap-3">
             <span className="whitespace-nowrap font-type text-[11px] uppercase tracking-[0.2em] text-ash-2 transition-colors group-hover:text-lamp">

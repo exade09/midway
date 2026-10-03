@@ -8,6 +8,9 @@ import { epochOf } from "@/lib/epoch";
 import { getStore } from "@/lib/store";
 import type { Burial } from "@/lib/types";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as { owner?: string; sigs?: string[] } | null;
   const owner = body?.owner;

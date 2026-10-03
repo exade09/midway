@@ -44,7 +44,10 @@ export const PROTECTED_MINTS = new Set<string>([
   "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn", // PUMP
 ]);
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://midway.fun";
+/** Public origin. Falls back to Vercel's production domain, then localhost. */
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 export const X_HANDLE = "midwaylot";
 export const X_URL = "https://x.com/midwaylot";
 

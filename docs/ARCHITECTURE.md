@@ -56,7 +56,10 @@ Tables are created on first use. Without `DATABASE_URL` the same interface write
 
 One page, five acts driven by `phase` in `Midway.tsx`: `lot → scan → ledger → ritual → receipt`.
 
-- `Stage.tsx` — the scene: three depth bands of the banner (masked), the Barker's eyes (`Eyes.tsx`, positions measured off the art), lamp glow + flicker, procedural fog (`Fog.tsx`), ash and moths (`Particles.tsx`), searchlight during scans, camera moves per act.
+- `Stage.tsx` — the scene, kept quiet on purpose: a vector night horizon (`Skyline.tsx`) with a slowly turning Ferris wheel and a field of crosses, one hanging lamp over the open middle that flickers, flares at burials and warms to amber on a grim reading, procedural fog (`Fog.tsx`), ash and moths (`Particles.tsx`), a searchlight during scans, and a camera move per act.
+- `BarkerPanel.tsx` — the Barker's portrait; his eyes (`Eyes.tsx`) follow the pointer and change with his mood.
+- `Polish.tsx` — counting numbers, the rolling countdown, and the pointer light on panels.
 - `sound.ts` — every sound is synthesised with Web Audio; starts on the first click, mute persists.
 - `motion.ts` — easing tokens. Nothing bounces.
 - `/docs` reuses the stage in its dimmed "receipt" camera as a backdrop.
+- Everything respects `prefers-reduced-motion` (`MotionConfig reducedMotion="user"` + CSS).

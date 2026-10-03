@@ -12,20 +12,21 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const r = await getStore().getReceipt(Number(id));
   const root = process.cwd();
-  const [bg, fell, typewriter] = await Promise.all([
-    readFile(join(root, "assets/og-base.jpg")),
+  const [fell, typewriter] = await Promise.all([
     readFile(join(root, "assets/fonts/im-fell-english-sc-latin-400-normal.woff")),
     readFile(join(root, "assets/fonts/special-elite-latin-400-normal.woff")),
   ]);
-  const bgSrc = `data:image/jpeg;base64,${bg.toString("base64")}`;
   const names = r ? r.burials.slice(0, 5).map((b) => `$${b.symbol}`) : [];
   const more = r && r.burials.length > 5 ? ` +${r.burials.length - 5}` : "";
 
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", background: "#050505" }}>
-        <img src={bgSrc} alt="" width={1200} height={630} style={{ position: "absolute", inset: 0, opacity: 0.55 }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(5,5,5,.2), rgba(5,5,5,.85) 55%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(40% 55% at 20% 0%, rgba(90,232,168,.22), transparent 70%)" }} />
+        <div style={{ position: "absolute", left: 70, bottom: 70, display: "flex", flexDirection: "column", color: "#ece7da" }}>
+          <div style={{ fontFamily: "Fell", fontSize: 92, letterSpacing: 4, lineHeight: 1 }}>MIDWAY</div>
+          <div style={{ fontFamily: "Type", fontSize: 22, letterSpacing: 4, color: "#9c9e98", marginTop: 12 }}>A CARNIVAL FOR DEAD BAGS</div>
+        </div>
         <div
           style={{
             position: "absolute",

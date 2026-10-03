@@ -1,6 +1,9 @@
 import { BARKER_SYSTEM, bagSpeech, scanSpeech } from "@/lib/barker";
 import type { Bag, ScanResult } from "@/lib/types";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 type Body = { kind: "scan"; scan: ScanResult } | { kind: "bag"; bag: Bag };
 
 /** Streams the barker's line. Claude writes it when a key is configured; otherwise a templated line is streamed the same way. */

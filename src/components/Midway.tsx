@@ -388,7 +388,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
       </AnimatePresence>
 
       {/* On phones the panels stack, so leave a window onto the scene first. */}
-      {entered && <div className="h-[34vh] shrink-0 lg:hidden" />}
+      {entered && <div className="h-[24vh] shrink-0 lg:hidden" />}
       {entered && (
         <div className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-6 px-4 py-5 lg:grid-cols-[minmax(0,580px)_1fr_minmax(0,400px)] lg:px-8">
           <div className="flex min-h-0 flex-col justify-center">

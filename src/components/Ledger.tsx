@@ -7,6 +7,7 @@ import { compact, short, sol, usd } from "@/lib/format";
 import { potCut } from "@/lib/burn";
 import { ease } from "@/lib/motion";
 import { sound } from "@/lib/sound";
+import { Ticker } from "./Polish";
 
 type Tab = "bury" | "watch" | "keep";
 
@@ -111,7 +112,7 @@ export function Ledger({
         <p className="px-6 py-2.5 font-serif text-[14px] italic text-ash-2">Live bags, ranked by how close they are to zero. Tap one and the Barker reads it.</p>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+      <div className="scroll-ink fade-y min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-1">
         <AnimatePresence mode="popLayout" initial={false}>
           {list.length === 0 && (
             <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-3 py-10 text-center font-serif italic text-ash">
@@ -140,9 +141,9 @@ export function Ledger({
       {tab === "bury" && bury.length > 0 && (
         <div className="border-t border-bone/10 px-6 py-4">
           <div className="grid grid-cols-3 gap-3 font-mono text-[12px] tabular">
-            <Stat k="Graves" v={String(chosen.length)} />
-            <Stat k="Rent back" v={`◎${sol(rent - cut)}`} hi />
-            <Stat k="To the pot" v={`◎${sol(cut)}`} brass />
+            <Stat k="Graves" v={chosen.length} f={(n) => String(Math.round(n))} />
+            <Stat k="Rent back" v={rent - cut} f={(n) => `◎${sol(n)}`} hi />
+            <Stat k="To the pot" v={cut} f={(n) => `◎${sol(n)}`} brass />
           </div>
           <button className="btn btn-lamp mt-4 w-full py-4 text-sm" disabled={!chosen.length || busy} onClick={onBury}>
             {chosen.length ? `Bury ${chosen.length} ${chosen.length === 1 ? "bag" : "bags"}` : "Choose the dead"}
@@ -154,13 +155,13 @@ export function Ledger({
   );
 }
 
-function Stat({ k, v, hi, brass }: { k: string; v: string; hi?: boolean; brass?: boolean }) {
+function Stat({ k, v, f, hi, brass }: { k: string; v: number; f: (n: number) => string; hi?: boolean; brass?: boolean }) {
   return (
     <div>
       <div className="label text-[9.5px]">{k}</div>
-      <motion.div key={v} initial={{ opacity: 0.3, y: -3 }} animate={{ opacity: 1, y: 0 }} className={`mt-0.5 text-[15px] ${hi ? "lamp-text" : brass ? "text-brass" : "text-bone"}`}>
-        {v}
-      </motion.div>
+      <div className={`mt-0.5 text-[15px] ${hi ? "lamp-text" : brass ? "text-brass" : "text-bone"}`}>
+        <Ticker value={v} format={f} duration={0.6} />
+      </div>
     </div>
   );
 }
@@ -189,17 +190,24 @@ function BuryRow({ bag, i, tab, checked, active, onToggle, onFocus }: { bag: Bag
       animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i, 14) * 0.035, duration: 0.45, ease: ease.out } }}
       exit={{ opacity: 0, x: 30, filter: "blur(4px)", transition: { duration: 0.35 } }}
       onClick={onFocus}
-      className={`group grid cursor-pointer grid-cols-[auto_auto_1fr_auto] items-center gap-3 rounded-sm px-3 py-2.5 transition-colors ${active ? "bg-bone/[.06]" : "hover:bg-bone/[.035]"}`}
+      className={`group relative grid cursor-pointer grid-cols-[auto_auto_1fr_auto] items-center gap-3 rounded-sm px-3 py-2.5 transition-colors duration-300 ${active ? "bg-bone/[.06]" : "hover:bg-bone/[.035]"}`}
     >
+      <span
+        aria-hidden
+        className={`absolute inset-y-2 left-0 w-[2px] rounded-full bg-lamp transition-all duration-500 ${checked ? "opacity-100 shadow-[0_0_10px_var(--color-lamp)]" : "opacity-0"}`}
+      />
       {can ? (
         <button
           role="checkbox"
           aria-checked={checked}
           aria-label={`Bury ${bag.market.symbol}`}
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className={`flex h-5 w-5 items-center justify-center border transition-all ${checked ? "border-lamp bg-lamp/15 text-lamp shadow-[0_0_10px_rgba(90,232,168,.4)]" : "border-bone/25 text-transparent group-hover:border-bone/50"}`}
+          className={`flex h-5 w-5 items-center justify-center border transition-all duration-300 ${checked ? "border-lamp bg-lamp/15 shadow-[0_0_10px_rgba(90,232,168,.4)]" : "border-bone/25 group-hover:border-bone/50"}`}
         >
-          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" /></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+            <motion.path d="M2 2l8 8" stroke="var(--color-lamp)" strokeWidth="1.8" strokeLinecap="round" initial={false} animate={{ pathLength: checked ? 1 : 0, opacity: checked ? 1 : 0 }} transition={{ duration: 0.18, ease: "easeOut" }} />
+            <motion.path d="M10 2l-8 8" stroke="var(--color-lamp)" strokeWidth="1.8" strokeLinecap="round" initial={false} animate={{ pathLength: checked ? 1 : 0, opacity: checked ? 1 : 0 }} transition={{ duration: 0.18, delay: checked ? 0.12 : 0, ease: "easeOut" }} />
+          </svg>
         </button>
       ) : (
         <span className="w-5" />
@@ -216,7 +224,10 @@ function BuryRow({ bag, i, tab, checked, active, onToggle, onFocus }: { bag: Bag
       </div>
       <div className="text-right font-mono text-[12px] tabular">
         <div className="text-ash-2">◎{sol(bag.rentLamports)}</div>
-        <div className="text-[11px] text-ash">{bag.valueUsd != null && bag.status !== "EMPTY" ? usd(bag.valueUsd) : ""}</div>
+        <div className="text-[11px] text-ash">
+          <span className="group-hover:hidden">{bag.valueUsd != null && bag.status !== "EMPTY" ? usd(bag.valueUsd) : ""}</span>
+          <span className="hidden font-type text-[9.5px] uppercase tracking-[0.16em] text-lamp/80 group-hover:inline">read ›</span>
+        </div>
       </div>
     </motion.div>
   );

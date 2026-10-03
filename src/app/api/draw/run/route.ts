@@ -6,6 +6,9 @@ import { seedBlock } from "@/lib/seed";
 import { pickWinner } from "@/lib/draw";
 import { rpcUrl } from "@/lib/config";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 /** Nightly cron. Closes the epoch that just ended, seeds it from a chain-fixed block, pays if a payout key is configured. */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;

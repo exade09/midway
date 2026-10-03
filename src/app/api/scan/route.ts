@@ -4,6 +4,9 @@ import { demoScan } from "@/lib/demo";
 import { isPubkey } from "@/lib/rpc";
 import type { ScanResult } from "@/lib/types";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 // A short memory per wallet: rescans and double-clicks don't hit the RPC again.
 const cache = new Map<string, { at: number; data: ScanResult }>();
 const TTL = 15_000;

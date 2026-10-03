@@ -262,8 +262,15 @@ class FileStore implements Store {
   }
 }
 
+/** Vercel's Neon integration exposes DATABASE_URL; older Postgres integrations used POSTGRES_URL. */
+export const databaseUrl = () => process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+
 let store: Store | null = null;
 export function getStore(): Store {
-  if (!store) store = process.env.DATABASE_URL ? new PgStore(process.env.DATABASE_URL) : new FileStore();
+  if (!store) {
+    const url = databaseUrl();
+    if (!url && process.env.VERCEL) console.warn("[midway] No DATABASE_URL — falling back to /tmp, which Vercel does not keep. Attach Neon.");
+    store = url ? new PgStore(url) : new FileStore();
+  }
   return store;
 }

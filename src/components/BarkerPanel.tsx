@@ -52,11 +52,15 @@ export function BarkerPanel({ mood, speech, speechId = 0, typing, draw, connecte
             transition={{ duration: 1.2, repeat: mood === "scan" ? Infinity : 0 }}
             style={{ background: `radial-gradient(circle, ${mood === "grave" ? "rgba(192,71,47,.45)" : "rgba(90,232,168,.45)"}, transparent 70%)` }}
           />
-          <div className="relative h-full w-full overflow-hidden rounded-full ring-1 ring-bone/20">
+          <motion.div
+            className="relative h-full w-full overflow-hidden rounded-full ring-1 ring-bone/20"
+            animate={{ scale: [1, 1.025, 1] }}
+            transition={{ duration: mood === "scan" ? 1.1 : 4.2, repeat: Infinity, ease: "easeInOut" }}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/art/barker.webp" alt="The Barker" className="h-full w-full object-cover" />
             <Eyes spots={PORTRAIT_EYES} mood={mood} px={sx} py={sy} />
-          </div>
+          </motion.div>
         </div>
         <div>
           <div className="font-display text-[26px] leading-none">The Barker</div>

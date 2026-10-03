@@ -4,6 +4,9 @@ import { markets } from "@/lib/market";
 import { getStore } from "@/lib/store";
 import type { RapSheet } from "@/lib/types";
 
+export const runtime = "nodejs";
+export const maxDuration = 20;
+
 /** Deployer rap sheet. Accepts a token mint (we resolve its deployer) or a deployer wallet. */
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
