@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import type { DrawState } from "@/lib/types";
 import { hms, short, sol } from "@/lib/format";
 import { sound } from "@/lib/sound";
-import { X_HANDLE } from "@/lib/config";
+import { TOKEN_CA, X_HANDLE, X_URL } from "@/lib/config";
+import { toast } from "@/lib/toast";
 import { ease } from "@/lib/motion";
 
 export function useNow(period = 1000) {
@@ -18,47 +20,187 @@ export function useNow(period = 1000) {
   return now;
 }
 
-export function TopBar({ draw, demo, onDemo, onLeaveDemo }: { draw: DrawState | null; demo: boolean; onDemo: () => void; onLeaveDemo: () => void }) {
+export function TopBar({
+  draw,
+  demo,
+  onDemo,
+  onLeaveDemo,
+  onGraveyard,
+}: {
+  draw: DrawState | null;
+  demo: boolean;
+  onDemo: () => void;
+  onLeaveDemo: () => void;
+  onGraveyard: () => void;
+}) {
   const now = useNow();
   const left = draw ? new Date(draw.closesAt).getTime() - now : null;
+  const lastHour = left != null && left < 3_600_000;
   return (
-    <header className="relative z-20 flex items-center justify-between gap-3 px-4 pt-4 lg:px-8">
-      <div className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/art/barker.webp" alt="" className="hidden h-9 w-9 rounded-full ring-1 ring-bone/15 sm:block" />
-        <div>
-          <div className="font-display text-[22px] leading-none tracking-[0.06em] sm:text-[26px]">MIDWAY</div>
-          <div className="bulbs mt-1 h-1 w-full opacity-70" />
+    <header className="relative z-20 px-4 pt-4 lg:px-8">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-5">
+          <Link href="/" className="flex items-center gap-3" aria-label="Midway home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/art/barker.webp" alt="" className="hidden h-9 w-9 rounded-full ring-1 ring-bone/15 sm:block" />
+            <div>
+              <div className="font-display text-[22px] leading-none tracking-[0.06em] sm:text-[26px]">MIDWAY</div>
+              <div className="bulbs mt-1 h-1 w-full opacity-70" />
+            </div>
+          </Link>
+          <nav className="hidden items-center gap-1 xl:flex">
+            <NavButton onClick={onGraveyard}>Graveyard</NavButton>
+            <NavLink href="/docs">Docs</NavLink>
+          </nav>
         </div>
-      </div>
 
-      <div className="hidden items-center gap-6 md:flex">
-        <div className="text-right">
-          <div className="label">Tonight&apos;s pot</div>
-          <div className="font-mono text-xl font-medium tabular text-brass" style={{ textShadow: "0 0 18px rgba(201,166,90,.35)" }}>
-            ◎ {draw ? sol(draw.potLamports, 3) : "—"}
+        <div className="hidden items-center gap-5 lg:flex xl:gap-6">
+          <Meter k="Tonight's pot">
+            <span className="text-brass" style={{ textShadow: "0 0 18px rgba(201,166,90,.35)" }}>
+              ◎ {draw ? sol(draw.potLamports, 3) : "—"}
+            </span>
+          </Meter>
+          <div className="h-9 w-px bg-bone/10" />
+          <Meter k="Draw in">
+            <motion.span
+              className={lastHour ? "text-brass" : "text-bone"}
+              animate={lastHour ? { opacity: [1, 0.55, 1] } : { opacity: 1 }}
+              transition={lastHour ? { duration: 1, repeat: Infinity } : {}}
+            >
+              {left != null ? hms(left) : "--:--:--"}
+            </motion.span>
+          </Meter>
+          <div className="hidden h-9 w-px bg-bone/10 xl:block" />
+          <div className="hidden xl:block">
+            <Meter k="Tickets">
+              <span className="text-ash-2">{draw ? Math.round(draw.ticketsTotal).toLocaleString("en-US") : "—"}</span>
+            </Meter>
           </div>
         </div>
-        <div className="h-9 w-px bg-bone/10" />
-        <div>
-          <div className="label">Draw in</div>
-          <div className="font-mono text-xl tabular text-bone">{left != null ? hms(left) : "--:--:--"}</div>
-        </div>
-        <div className="h-9 w-px bg-bone/10" />
-        <div>
-          <div className="label">Tickets</div>
-          <div className="font-mono text-xl tabular text-ash-2">{draw ? Math.round(draw.ticketsTotal).toLocaleString("en-US") : "—"}</div>
+
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            <ContractPill />
+          </div>
+          <MuteButton />
+          <a
+            href={X_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost hidden h-10 gap-2 px-3 normal-case tracking-normal sm:inline-flex"
+            aria-label="Midway on X — @midwaylot"
+            title="@midwaylot"
+          >
+            <XLogo />
+            <span className="hidden font-mono text-[12px] 2xl:inline">@{X_HANDLE}</span>
+          </a>
+          <WalletButton demo={demo} onDemo={onDemo} onLeaveDemo={onLeaveDemo} />
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <MuteButton />
-        <a href={`https://x.com/${X_HANDLE}`} target="_blank" rel="noreferrer" className="btn btn-ghost hidden h-10 w-10 p-0 font-display text-base normal-case tracking-normal sm:inline-flex" aria-label="Midway on X">
-          𝕏
-        </a>
-        <WalletButton demo={demo} onDemo={onDemo} onLeaveDemo={onLeaveDemo} />
+      {/* Phones and narrow screens: the contract, the pot and the links on a second line. */}
+      <div className="mt-3 flex items-center justify-between gap-2 lg:hidden">
+        <div className="sm:hidden">
+          <ContractPill compact />
+        </div>
+        <div className="hidden font-mono text-[13px] tabular text-brass sm:block">
+          ◎ {draw ? sol(draw.potLamports, 3) : "—"} <span className="text-ash">· draw in {left != null ? hms(left) : "--:--:--"}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="label hover:text-bone" onClick={onGraveyard}>Graveyard</button>
+          <Link className="label hover:text-bone" href="/docs">Docs</Link>
+          <a className="label hover:text-bone sm:hidden" href={X_URL} target="_blank" rel="noreferrer">𝕏</a>
+        </div>
       </div>
+      <div className="mt-2 text-center font-mono text-[12.5px] tabular text-brass sm:hidden">
+        ◎ {draw ? sol(draw.potLamports, 3) : "—"} pot <span className="text-ash">· draw in {left != null ? hms(left) : "--:--:--"}</span>
+      </div>
+      <nav className="mt-2 hidden items-center justify-start gap-1 lg:flex xl:hidden">
+        <NavButton onClick={onGraveyard}>Graveyard</NavButton>
+        <NavLink href="/docs">Docs</NavLink>
+      </nav>
     </header>
+  );
+}
+
+function Meter({ k, children }: { k: string; children: React.ReactNode }) {
+  return (
+    <div className="text-left">
+      <div className="label">{k}</div>
+      <div className="font-mono text-xl font-medium tabular">{children}</div>
+    </div>
+  );
+}
+
+const navCls = "relative px-3 py-2 font-type text-[11px] uppercase tracking-[0.2em] text-ash-2 transition-colors hover:text-bone after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-lamp after:transition-transform after:duration-300 hover:after:scale-x-100";
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className={navCls} onMouseEnter={() => sound.tick()}>
+      {children}
+    </Link>
+  );
+}
+function NavButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={() => { sound.start(); onClick(); }} className={navCls} onMouseEnter={() => sound.tick()}>
+      {children}
+    </button>
+  );
+}
+
+function XLogo() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77L17.75 3Zm-1.08 16.2h1.7L7.4 4.73H5.58l11.09 14.47Z" />
+    </svg>
+  );
+}
+
+/** The token's contract address. One click copies it; before launch it just says "soon". */
+export function ContractPill({ compact }: { compact?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const live = TOKEN_CA.length > 0;
+  const copy = async () => {
+    sound.start();
+    if (!live) {
+      toast("The token isn't live yet — watch @midwaylot for the CA.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(TOKEN_CA);
+      setCopied(true);
+      sound.tick();
+      toast("Contract address copied", "ok");
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      toast("Couldn't reach the clipboard — select the address by hand.", "error");
+    }
+  };
+  return (
+    <button
+      onClick={copy}
+      title={live ? `${TOKEN_CA} — click to copy` : "Token launching soon"}
+      className={`group flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-[2px] px-3 shadow-[inset_0_0_0_1px_rgba(201,166,90,.35)] transition-[box-shadow,background] hover:bg-brass/[.06] hover:shadow-[inset_0_0_0_1px_rgba(201,166,90,.7),0_0_24px_-6px_rgba(201,166,90,.5)] ${compact ? "h-8 px-2.5" : ""}`}
+    >
+      <span className="font-type text-[10px] uppercase tracking-[0.22em] text-brass">CA</span>
+      <span className="font-mono text-[12px] text-bone/90">{live ? short(TOKEN_CA, compact ? 4 : 5) : "soon"}</span>
+      {live && (
+        <span className="relative h-3.5 w-3.5 text-ash-2 transition-colors group-hover:text-brass">
+          <AnimatePresence mode="wait" initial={false}>
+            {copied ? (
+              <motion.svg key="ok" viewBox="0 0 16 16" className="absolute inset-0 text-lamp" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}>
+                <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </motion.svg>
+            ) : (
+              <motion.svg key="cp" viewBox="0 0 16 16" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <rect x="5" y="5" width="8.5" height="8.5" rx="1" fill="none" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M3 10.5V3.5A1 1 0 0 1 4 2.5h6.5" fill="none" stroke="currentColor" strokeWidth="1.3" />
+              </motion.svg>
+            )}
+          </AnimatePresence>
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -103,16 +245,15 @@ export function WalletButton({ demo, onDemo, onLeaveDemo, big }: { demo: boolean
 
 function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () => void; onDemo: () => void }) {
   const { wallets, select, connect, wallet } = useWallet();
-  const [picked, setPicked] = useState<string | null>(null);
   const usable = wallets.filter((w) => w.readyState === WalletReadyState.Installed || w.readyState === WalletReadyState.Loadable);
 
-  // select() only chooses; connect() has to follow once the adapter is actually swapped in.
-  useEffect(() => {
-    if (picked && wallet?.adapter.name === picked) {
-      connect().catch(() => {}).finally(() => setPicked(null));
-      onClose();
-    }
-  }, [picked, wallet, connect, onClose]);
+  // With autoConnect on, selecting a new wallet connects by itself. Re-picking the already-selected
+  // wallet changes nothing in the provider, so that case needs an explicit connect().
+  const pick = (name: (typeof usable)[number]["adapter"]["name"]) => {
+    onClose();
+    if (wallet?.adapter.name === name) connect().catch(() => {});
+    else select(name);
+  };
 
   return (
     <AnimatePresence>
@@ -135,10 +276,7 @@ function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () =>
                 <button
                   key={w.adapter.name}
                   className="btn btn-ghost justify-start gap-3 normal-case tracking-normal"
-                  onClick={() => {
-                    setPicked(w.adapter.name);
-                    select(w.adapter.name);
-                  }}
+                  onClick={() => pick(w.adapter.name)}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={w.adapter.icon} alt="" className="h-6 w-6" />

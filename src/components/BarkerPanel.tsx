@@ -22,7 +22,7 @@ const MOOD_LABEL: Record<Mood, string> = {
   sleep: "dozing",
 };
 
-export function BarkerPanel({ mood, speech, typing, draw, connected }: { mood: Mood; speech: string; typing: boolean; draw: DrawState | null; connected: boolean }) {
+export function BarkerPanel({ mood, speech, speechId = 0, typing, draw, connected }: { mood: Mood; speech: string; speechId?: number; typing: boolean; draw: DrawState | null; connected: boolean }) {
   // Portrait gaze follows the pointer too, more subtly.
   const px = useMotionValue(0);
   const py = useMotionValue(0);
@@ -70,7 +70,7 @@ export function BarkerPanel({ mood, speech, typing, draw, connected }: { mood: M
 
       <div className="relative mx-5 mt-4 min-h-[148px] rounded-sm bg-ink-0/50 px-4 py-3.5 shadow-[inset_0_0_0_1px_rgba(236,231,218,.06)]">
         <span className="absolute -top-2 left-8 h-4 w-4 rotate-45 bg-ink-0/50 shadow-[inset_1px_1px_0_rgba(236,231,218,.06)]" />
-        <p className="font-serif text-[17.5px] leading-[1.5] text-bone/90">
+        <p key={speechId} className="font-serif text-[17.5px] leading-[1.5] text-bone/90">
           <Inked text={speech} />
           {typing && <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-pulse bg-lamp" />}
         </p>
@@ -128,6 +128,11 @@ function DrawBooth({ draw, connected }: { draw: DrawState | null; connected: boo
           {draw.last.winner ? (
             <>
               <span className="font-mono text-[12px] text-bone">{short(draw.last.winner)}</span> took <span className="font-mono text-brass">◎{(draw.last.potLamports / 1e9).toFixed(3)}</span>
+              {draw.last.paidSig && (
+                <a className="ml-1.5 font-type text-[10px] uppercase tracking-[0.16em] text-ash hover:text-lamp" href={`https://solscan.io/tx/${draw.last.paidSig}`} target="_blank" rel="noreferrer">
+                  paid ↗
+                </a>
+              )}
             </>
           ) : (
             <span className="italic">no entrants — the pot rolled over.</span>

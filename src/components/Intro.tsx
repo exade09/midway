@@ -10,7 +10,7 @@ const WORD = "MIDWAY".split("");
 export function Intro({ onEnter }: { onEnter: () => void }) {
   const [lit, setLit] = useState(0);
   useEffect(() => {
-    const ids = WORD.map((_, i) => setTimeout(() => setLit(i + 1), 500 + i * 230 + (i === 3 ? 260 : 0)));
+    const ids = WORD.map((_, i) => setTimeout(() => setLit(i + 1), 1500 + i * 230 + (i === 3 ? 260 : 0)));
     return () => ids.forEach(clearTimeout);
   }, []);
   const ready = lit === WORD.length;
@@ -21,6 +21,7 @@ export function Intro({ onEnter }: { onEnter: () => void }) {
       exit={{ opacity: 0, transition: { duration: 1.2, ease: ease.inOut } }}
     >
       <div className="relative px-6 text-center">
+        <DarkEyes />
         <motion.div
           className="bulbs mx-auto mb-8 h-1 w-56"
           initial={{ opacity: 0, scaleX: 0.3 }}
@@ -71,5 +72,34 @@ export function Intro({ onEnter }: { onEnter: () => void }) {
         </motion.div>
       </div>
     </motion.div>
+  );
+}
+
+/** Before anything else: something in the dark opens its eyes and looks at you. */
+function DarkEyes() {
+  const eye = (cx: number, cy: number, r: number, delay: number) => (
+    <motion.g
+      style={{ originX: `${cx}px`, originY: `${cy}px` }}
+      initial={{ scaleY: 0, opacity: 0 }}
+      animate={{ scaleY: [0, 1, 1, 0.05, 1, 1], opacity: [0, 1, 1, 1, 1, 0.9] }}
+      transition={{ duration: 2.4, delay, times: [0, 0.12, 0.55, 0.6, 0.66, 1], ease: "easeOut" }}
+    >
+      <ellipse cx={cx} cy={cy} rx={r} ry={r * 1.05} fill="#f3f1ea" />
+      <circle cx={cx + 1.5} cy={cy + 1} r={r * 0.36} fill="#060606" />
+      <circle cx={cx - 1} cy={cy - 2} r={r * 0.12} fill="#fff" />
+    </motion.g>
+  );
+  return (
+    <motion.svg
+      aria-hidden
+      viewBox="0 0 120 60"
+      className="mx-auto mb-4 h-20 w-40 sm:h-24 sm:w-48"
+      style={{ filter: "drop-shadow(0 0 14px rgba(90,232,168,.55))" }}
+      animate={{ opacity: [1, 1, 0.35] }}
+      transition={{ duration: 4.2, times: [0, 0.7, 1] }}
+    >
+      {eye(42, 36, 11, 0.35)}
+      {eye(80, 26, 10, 0.42)}
+    </motion.svg>
   );
 }

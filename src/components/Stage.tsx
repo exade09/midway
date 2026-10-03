@@ -44,6 +44,9 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
   const midY = useTransform(sy, (v) => v * -6);
   const frontX = useTransform(sx, (v) => v * -24);
   const frontY = useTransform(sy, (v) => v * -10);
+  const lanternX = useTransform(sx, (v) => `${(v + 1) * 50}%`);
+  const lanternY = useTransform(sy, (v) => `${(v + 1) * 50}%`);
+  const lantern = useTransform([lanternX, lanternY], ([x, y]) => `radial-gradient(420px 320px at ${x} ${y}, rgba(220,240,230,.10), rgba(90,232,168,.035) 40%, transparent 70%)`);
   const gazeX = useTransform(sx, (v) => v * 15);
   const gazeY = useTransform(sy, (v) => v * 11);
 
@@ -185,6 +188,9 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
       </motion.div>
       </div>
 
+      {/* A lantern in your hand: the ground brightens wherever you look. */}
+      <motion.div className="absolute inset-0 hidden lg:block" style={{ background: lantern, mixBlendMode: "screen" }} />
+
       {/* Atmosphere above the scene, below the UI. */}
       <Fog className="bottom-[8%]" opacity={0.22} speed={140} seed={3} height="40%" />
       <Fog className="bottom-0" opacity={0.3} speed={80} seed={11} height="30%" />
@@ -241,7 +247,7 @@ function GraveTag({ tag, i }: { tag: RisingTag; i: number }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 3.4, times: [0, 0.15, 0.7, 1], ease: "easeOut" }}
     >
-      <div className="ticket px-3 py-1.5 text-center shadow-[0_10px_30px_rgba(0,0,0,.8)]">
+      <div className="ticket origin-center px-3 py-1.5 text-center shadow-[0_10px_30px_rgba(0,0,0,.8)] max-lg:scale-75">
         <div className="font-display text-[16px] leading-none">${tag.label}</div>
         <div className={`mt-1 font-type text-[9px] tracking-[0.2em] ${dead ? "text-blood-2" : "text-lamp-deep"}`}>{tag.status === "ALIVE" ? "BREATHING" : tag.status}</div>
       </div>

@@ -46,6 +46,10 @@ export const PROTECTED_MINTS = new Set<string>([
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://midway.fun";
 export const X_HANDLE = "midwaylot";
+export const X_URL = "https://x.com/midwaylot";
+
+/** The Midway token. Empty until launch — the header shows "soon" instead of an address. */
+export const TOKEN_CA = (process.env.NEXT_PUBLIC_TOKEN_CA ?? "").trim();
 
 /** Server-side RPC. Helius when a key is present, public mainnet otherwise. */
 export function rpcUrl(): string {

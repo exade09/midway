@@ -3,6 +3,8 @@ import { motion } from "motion/react";
 import { ease } from "@/lib/motion";
 import { WalletButton } from "./TopBar";
 import { POT_CUT_BPS } from "@/lib/config";
+import type { GraveyardData } from "@/lib/types";
+import { sol, usd } from "@/lib/format";
 
 const RULES = [
   ["I", "Bury any rugged, dusted or empty token.", "The rent locked under each grave comes home — about ◎0.002 apiece."],
@@ -11,7 +13,7 @@ const RULES = [
   ["IV", "The Barker watches the living.", "He reads your bags that still trade and tells you which one is next to die."],
 ] as const;
 
-export function Gate({ onDemo }: { onDemo: () => void }) {
+export function Gate({ onDemo, stats }: { onDemo: () => void; stats?: GraveyardData["stats"] | null }) {
   return (
     <motion.section
       key="gate"
@@ -55,6 +57,19 @@ export function Gate({ onDemo }: { onDemo: () => void }) {
         </button>
       </div>
       <p className="mt-4 font-serif text-sm italic text-ash">Read-only until you sign. Stablecoins and blue-chips are never offered for burial.</p>
+
+      {stats && stats.graves > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4, duration: 1 }}
+          className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-bone/10 pt-5 font-mono text-[13px] tabular text-ash-2"
+        >
+          <span><b className="font-medium text-bone">{stats.graves.toLocaleString("en-US")}</b> graves dug</span>
+          <span><b className="font-medium text-lamp">◎{sol(stats.rentLamports, 2)}</b> rent sent home</span>
+          {stats.lossUsd > 0 && <span><b className="font-medium text-blood">{usd(stats.lossUsd)}</b> in losses laid to rest</span>}
+        </motion.div>
+      )}
     </motion.section>
   );
 }

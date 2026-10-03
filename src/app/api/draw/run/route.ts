@@ -1,14 +1,15 @@
 import type { NextRequest } from "next/server";
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { getStore } from "@/lib/store";
-import { epochOf } from "@/lib/epoch";
+import { closesAt, epochOf } from "@/lib/epoch";
+import { seedBlock } from "@/lib/seed";
 import { pickWinner } from "@/lib/draw";
-import { rpc } from "@/lib/rpc";
 import { rpcUrl } from "@/lib/config";
 
-/** Nightly cron. Closes the epoch that just ended, picks a winner from a fresh blockhash, pays if a payout key is configured. */
+/** Nightly cron. Closes the epoch that just ended, seeds it from a chain-fixed block, pays if a payout key is configured. */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") return new Response("Set CRON_SECRET first", { status: 503 });
   if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
 
   const store = getStore();
@@ -17,9 +18,14 @@ export async function GET(req: NextRequest) {
   if (existing) return Response.json({ already: true, draw: existing });
 
   const [entrants, pot] = await Promise.all([store.entrants(epoch), store.potLamports(epoch)]);
-  const slot = await rpc<number>("getSlot", [{ commitment: "finalized" }]);
-  const { value } = await rpc<{ value: { blockhash: string } }>("getLatestBlockhash", [{ commitment: "finalized" }]);
-  const seed = `${value.blockhash}:${epoch}`;
+  let block: { slot: number; blockhash: string };
+  try {
+    block = await seedBlock(closesAt(epoch));
+  } catch (e) {
+    return Response.json({ epoch, waiting: (e as Error).message }, { status: 425 });
+  }
+  const { slot } = block;
+  const seed = `${block.blockhash}:${epoch}`;
   const winner = pickWinner(entrants, seed);
   const ticketsTotal = entrants.reduce((t, e) => t + e.tickets, 0);
   await store.saveDraw({ epoch, winner, potLamports: pot, ticketsTotal, seed, slot, paidSig: null, createdAt: new Date().toISOString() });

@@ -16,9 +16,16 @@ One screen, five acts: **Gate → Reading → Ledger → Burial → Stub**.
 | **Burn** | Built client-side (`lib/burn.ts`): `burnChecked` + `closeAccount` per bag, ≤ 7 per tx, a `MIDWAY` memo, and the pot cut as a SOL transfer. User signs everything. |
 | **Record** | `/api/burn/record` re-reads every signature from chain and only trusts what it proves (signer, memo, closes, pot cut). |
 | **Tickets** | `lib/tickets.ts` — 0 for empty accounts and your own launches; the token must prove a real market (≥ 50 holders or a ≥ 0.01 SOL buy); loss adds weight on a log scale (max 3×); 25 per wallet per night. |
-| **Draw** | Nightly at `DRAW_HOUR_UTC` (18:00 UTC = 21:00 MSK) by Vercel cron → `/api/draw/run`. Seed = a finalized blockhash after close; `sha256(seed) mod tickets` over entrants sorted by address — anyone can re-run it. Pays automatically if `DRAW_PAYOUT_SECRET` is set. Empty nights roll over. |
+| **Draw** | Nightly at `DRAW_HOUR_UTC` (18:00 UTC = 21:00 MSK) by Vercel cron → `/api/draw/run`. Seed = hash of the first finalized block stamped ≥ 60 s after close (`lib/seed.ts`) — fixed by the chain, not by when the cron runs. `sha256(seed) mod tickets` over entrants sorted by address; `/api/draw/proof?epoch=N` publishes everything needed to re-run it. Pays automatically if `DRAW_PAYOUT_SECRET` is set. Empty nights roll over. |
 | **Rap sheet** | `/api/rapsheet?q=` — paste a token or deployer: launches/migrations from Jupiter + everything of theirs buried on Midway. |
+| **Graveyard** | Drawer on the main screen: fresh graves, lifetime totals and the Hall of shame (deployers ranked by mourners). |
+| **Docs** | `/docs` — the public Rulebook. Death Clock weights are rendered from `DEATH_SIGNALS` so docs and code can't drift apart. |
 | **Stub** | `/r/[id]` with a generated OG card so shared stubs unfurl on X. |
+
+## Docs
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit, trust boundaries, data model
+- [docs/DEPLOY.ru.md](docs/DEPLOY.ru.md) — запуск на Vercel по шагам
 
 ## Run
 
@@ -33,7 +40,7 @@ Without `DATABASE_URL` everything lands in `/tmp/midway-store.json` (dev only). 
 ## Before mainnet
 
 - Set `NEXT_PUBLIC_POT_WALLET` to a dedicated wallet. Without it, burns still work but no cut is taken and no tickets have a pot behind them.
-- Keep `vercel.json`'s cron minute in step with `NEXT_PUBLIC_DRAW_HOUR_UTC`, and set `CRON_SECRET`.
+- Keep `vercel.json`'s cron hour in step with `NEXT_PUBLIC_DRAW_HOUR_UTC` (it runs at :03 and retries at :20), and set `CRON_SECRET` — the route refuses to run in production without it.
 - A prize draw with entry tied to activity may be regulated where your users live. Check before you promote it.
 
 ## Art

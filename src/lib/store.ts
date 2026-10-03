@@ -25,6 +25,8 @@ export interface Store {
   recentBurials(limit: number): Promise<Burial[]>;
   burialsByDeployer(deployer: string): Promise<Burial[]>;
   topDeployers(limit: number): Promise<{ deployer: string; buried: number; mourners: number; lossUsd: number }[]>;
+  /** Lifetime totals for the graveyard header. */
+  stats(): Promise<{ graves: number; mourners: number; rentLamports: number; lossUsd: number }>;
   saveDraw(d: DrawRow): Promise<void>;
   getDraw(epoch: number): Promise<DrawRow | null>;
   lastDraw(): Promise<DrawRow | null>;
@@ -115,6 +117,11 @@ class PgStore implements Store {
     const rows = (await this.sql`SELECT deployer, COUNT(DISTINCT mint) AS b, COUNT(DISTINCT owner) AS m, COALESCE(SUM(loss_usd),0) AS l
       FROM burials WHERE deployer IS NOT NULL GROUP BY deployer ORDER BY m DESC, b DESC LIMIT ${limit}`) as Record<string, unknown>[];
     return rows.map((r) => ({ deployer: r.deployer as string, buried: Number(r.b), mourners: Number(r.m), lossUsd: Number(r.l) }));
+  }
+  async stats() {
+    await this.ready;
+    const [r] = (await this.sql`SELECT COUNT(*) AS g, COUNT(DISTINCT owner) AS m, COALESCE(SUM(rent),0) AS r, COALESCE(SUM(loss_usd),0) AS l FROM burials`) as Record<string, unknown>[];
+    return { graves: Number(r.g), mourners: Number(r.m), rentLamports: Number(r.r), lossUsd: Number(r.l) };
   }
   async saveDraw(d: DrawRow) {
     await this.ready;
@@ -226,6 +233,15 @@ class FileStore implements Store {
     }
     return [...m].map(([deployer, e]) => ({ deployer, buried: e.mints.size, mourners: e.owners.size, lossUsd: e.loss }))
       .sort((a, b) => b.mourners - a.mourners || b.buried - a.buried).slice(0, limit);
+  }
+  async stats() {
+    const b = this.burials(await this.read());
+    return {
+      graves: b.length,
+      mourners: new Set(b.map((x) => x.owner)).size,
+      rentLamports: b.reduce((t, x) => t + x.rentLamports, 0),
+      lossUsd: b.reduce((t, x) => t + (x.lossUsd ?? 0), 0),
+    };
   }
   saveDraw(dr: DrawRow) {
     return this.mutate((d) => {

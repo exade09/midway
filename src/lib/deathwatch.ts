@@ -1,5 +1,23 @@
 import type { DeathReading, Symptom, TokenMarket } from "./types";
 
+/** The same rules, written for humans. Shown in the docs; keep in step with `deathReading` below. */
+export const DEATH_SIGNALS: { signal: string; when: string; points: string }[] = [
+  { signal: "Pool depth", when: "Liquidity under $1k / $5k / $20k", points: "30 / 20 / 10" },
+  { signal: "Bleeding pool", when: "Liquidity −50% in 24h, or −30% in 6h", points: "15 / 12" },
+  { signal: "Price collapse", when: "−50% in 24h, or −30% in 6h", points: "15 / 10" },
+  { signal: "Holder exodus", when: "Holders −15% / −5% in 24h", points: "15 / 10" },
+  { signal: "Sell pressure", when: "Sell volume > 1.5× buy volume over 6h", points: "10" },
+  { signal: "Net exits", when: "More wallets leaving than arriving (6h)", points: "5" },
+  { signal: "Silence", when: "Volume −70% in 24h", points: "10" },
+  { signal: "Whales", when: "Top holders own > 60% / > 40%", points: "15 / 10" },
+  { signal: "Live mint authority", when: "More supply can be printed", points: "15" },
+  { signal: "Live freeze authority", when: "Your account can be frozen", points: "10" },
+  { signal: "Dev bag", when: "Deployer still holds > 5%", points: "10" },
+  { signal: "Serial launcher", when: "Deployer has launched ≥ 20 tokens", points: "10" },
+  { signal: "Bots", when: "Jupiter organic score < 20", points: "10" },
+  { signal: "Forgotten", when: "Jupiter no longer indexes it", points: "5" },
+];
+
 /**
  * Death Clock: a transparent 0–100 score of how close a live token is to zero.
  * Every point is traceable to a named symptom, so the barker can explain exactly why.

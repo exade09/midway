@@ -10,7 +10,8 @@ import { useState } from "react";
 /** The stub you keep: proof of loss, and your admission to tonight's draw. */
 export function ReceiptCard({ receipt, onClose, demo }: { receipt: Receipt; onClose: () => void; demo?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const url = `${SITE_URL}/r/${receipt.id}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : SITE_URL;
+  const url = `${origin}/r/${receipt.id}`;
   const n = receipt.burials.length;
   const tweet = `I just buried ${n} dead ${n === 1 ? "bag" : "bags"} at the Midway and took ◎${sol(receipt.reclaimedLamports - receipt.potLamports, 4)} of rent back.\n\nTicket No. ${String(receipt.id).padStart(6, "0")} for tonight's draw.\n\n@${X_HANDLE}`;
   const shown = receipt.burials.slice(0, 7);

@@ -140,3 +140,9 @@ export interface RapSheet {
   recent: { mint: string; symbol: string; buriedAt: string }[];
   verdict: string;
 }
+
+export interface GraveyardData {
+  recent: Burial[];
+  deployers: { deployer: string; buried: number; mourners: number; lossUsd: number }[];
+  stats: { graves: number; mourners: number; rentLamports: number; lossUsd: number };
+}

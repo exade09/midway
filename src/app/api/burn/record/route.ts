@@ -65,7 +65,8 @@ export async function POST(req: NextRequest) {
   });
 
   const lossKnown = burials.filter((b) => b.lossUsd != null);
-  const receipt = await store.addReceipt({
+  const receipt = await store
+    .addReceipt({
     owner,
     epoch,
     sigs,
@@ -75,6 +76,8 @@ export async function POST(req: NextRequest) {
     lossUsd: lossKnown.length ? lossKnown.reduce((t, b) => t + (b.lossUsd ?? 0), 0) : null,
     burials,
     createdAt: new Date().toISOString(),
-  });
+    })
+    .catch(() => null);
+  if (!receipt) return Response.json({ error: "Already recorded" }, { status: 409 });
   return Response.json(receipt);
 }

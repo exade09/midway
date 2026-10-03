@@ -13,6 +13,10 @@ import { BarkerPanel } from "./BarkerPanel";
 import { Ritual, type RitualStage } from "./Ritual";
 import { ReceiptCard } from "./ReceiptCard";
 import { Ticker } from "./Ticker";
+import { Graveyard } from "./Graveyard";
+import { Toasts } from "./Toasts";
+import type { GraveyardData } from "@/lib/types";
+import { toast } from "@/lib/toast";
 import type { Bag, Burial, DrawState, Receipt, ScanResult } from "@/lib/types";
 import { isBurnable } from "@/lib/classify";
 import { IDLE_LINES } from "@/lib/barker";
@@ -57,13 +61,16 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
   const [focus, setFocus] = useState<string | null>(null);
   const [speech, setSpeech] = useState(IDLE_LINES[0]);
   const [typing, setTyping] = useState(false);
+  const [speechId, setSpeechId] = useState(0);
   const [tags, setTags] = useState<RisingTag[]>([]);
   const [flare, setFlare] = useState(0);
   const [ritual, setRitual] = useState<RitualStage | null>(null);
   const [ritualBags, setRitualBags] = useState<Bag[]>([]);
   const [receipt, setReceipt] = useState<Receipt | null>(initialReceipt);
   const [draw, setDraw] = useState<DrawState | null>(null);
-  const [feed, setFeed] = useState<Burial[]>([]);
+  const [yard, setYard] = useState<GraveyardData | null>(null);
+  const [yardOpen, setYardOpen] = useState(false);
+  const feed: Burial[] = yard?.recent ?? [];
   const [earned, setEarned] = useState(0);
   const pendingSigs = useRef<string[]>([]);
 
@@ -87,6 +94,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
 
   /** Say a line locally, word by word — same feel as a streamed one. */
   const sayLocal = useCallback(async (text: string) => {
+    setSpeechId((n) => n + 1);
     setTyping(true);
     const words = text.split(/(?<=\s)/);
     let acc = "";
@@ -99,6 +107,8 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
   }, []);
 
   const sayRemote = useCallback(async (body: unknown, fallback: string) => {
+    setSpeechId((n) => n + 1);
+    setSpeech("");
     setTyping(true);
     try {
       const full = await speak(body, setSpeech);
@@ -149,7 +159,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
       const r = await fetch(`/api/graveyard${demo ? "?demo=1" : ""}`).catch(() => null);
       if (live && r?.ok) {
         const j = await r.json();
-        if (live) setFeed(j.recent);
+        if (live) setYard(j);
       }
     };
     const id0 = setTimeout(load, 0);
@@ -164,7 +174,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
   /* ─────────────── The reading ─────────────── */
 
   const runScan = useCallback(
-    async (who: string) => {
+    async (who: string, fresh = false) => {
       setPhase("scan");
       setMood("scan");
       setTags([]);
@@ -174,13 +184,14 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
       const t0 = Date.now();
       let res: ScanResult;
       try {
-        const r = await fetch(`/api/scan?owner=${who}`);
+        const r = await fetch(`/api/scan?owner=${who}${fresh ? "&fresh=1" : ""}`);
         const j = await r.json();
         if (!r.ok) throw new Error(j.error ?? "The lamp went out");
         res = j;
       } catch (e) {
         setPhase("lot");
         setMood("idle");
+        toast(`Scan failed: ${(e as Error).message}`, "error", 5000);
         void sayLocal(`The lamp sputtered — ${(e as Error).message}. Try me again.`);
         return;
       }
@@ -336,7 +347,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
 
   const left =
     phase === "lot" || (phase === "receipt" && !scan) ? (
-      <Gate key="gate" onDemo={() => setDemo(true)} />
+      <Gate key="gate" onDemo={() => setDemo(true)} stats={yard?.stats} />
     ) : phase === "scan" ? (
       <ScanCard key="scan" found={tags.length} />
     ) : scan ? (
@@ -350,7 +361,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
         onFocus={focusBag}
         onBury={bury}
         demo={demo}
-        onRescan={() => owner && runScan(owner)}
+        onRescan={() => owner && runScan(owner, true)}
         busy={phase === "ritual"}
       />
     ) : null;
@@ -359,7 +370,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
     <main className="relative flex min-h-dvh flex-col lg:h-dvh">
       <Stage phase={phase} mood={mood} tags={tags} flare={flare} />
 
-      <AnimatePresence>{entered && <TopBarIn key="top" draw={draw} demo={demo} onDemo={() => setDemo(true)} onLeaveDemo={() => { setDemo(false); setScan(null); setEarned(0); }} />}</AnimatePresence>
+      <AnimatePresence>{entered && <TopBarIn key="top" draw={draw} demo={demo} onGraveyard={() => setYardOpen(true)} onDemo={() => setDemo(true)} onLeaveDemo={() => { setDemo(false); setScan(null); setEarned(0); }} />}</AnimatePresence>
 
       <AnimatePresence mode="wait">
         {entered && ACTS[phase] && (
@@ -385,7 +396,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
           </div>
           <div className="hidden lg:block" />
           <div className="flex min-h-0 flex-col justify-center lg:items-end">
-            <BarkerPanel mood={mood} speech={speech} typing={typing} draw={draw && demo ? { ...draw, yourTickets: Math.min(25, earned) } : draw} connected={!!owner} />
+            <BarkerPanel mood={mood} speech={speech} speechId={speechId} typing={typing} draw={draw && demo ? { ...draw, yourTickets: Math.min(25, earned) } : draw} connected={!!owner} />
           </div>
         </div>
       )}
@@ -393,6 +404,8 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
       {entered && <Ticker feed={feed} />}
 
       <AnimatePresence>{!entered && <Intro key="intro" onEnter={enter} />}</AnimatePresence>
+      <Graveyard open={yardOpen} onClose={() => setYardOpen(false)} data={yard} />
+      <Toasts />
       <AnimatePresence>
         {phase === "ritual" && ritual && (
           <Ritual
