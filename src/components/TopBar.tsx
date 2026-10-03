@@ -241,9 +241,9 @@ export function WalletButton({ demo, onDemo, onLeaveDemo, big }: { demo: boolean
 
 /** The wallets the booth always offers. Others found in the browser are listed after them — except MetaMask, which never is. */
 const FEATURED = [
-  { name: "Phantom", mark: "P", install: "https://phantom.com/download", browse: (u: string) => `https://phantom.app/ul/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
-  { name: "Solflare", mark: "S", install: "https://solflare.com/download", browse: (u: string) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
-  { name: "Backpack", mark: "B", install: "https://backpack.app/download", browse: null },
+  { name: "Phantom", icon: "/wallets/phantom.svg", install: "https://phantom.com/download", browse: (u: string) => `https://phantom.app/ul/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
+  { name: "Solflare", icon: "/wallets/solflare.svg", install: "https://solflare.com/download", browse: (u: string) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
+  { name: "Backpack", icon: "/wallets/backpack.png", install: "https://backpack.app/download", browse: null },
 ] as const;
 const BANNED = /metamask/i;
 
@@ -290,13 +290,14 @@ function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () =>
                 return w ? (
                   <button key={f.name} className={row} onClick={() => pick(w.adapter.name)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={w.adapter.icon} alt="" className="h-6 w-6" />
+                    <img src={w.adapter.icon || f.icon} alt="" className="h-6 w-6 rounded-[6px]" />
                     <span className="font-serif text-lg">{f.name}</span>
                     <span className="ml-auto font-type text-[10px] uppercase tracking-[0.2em] text-lamp">Detected</span>
                   </button>
                 ) : (
                   <button key={f.name} className={`${row} opacity-80 hover:opacity-100`} onClick={() => fetchWallet(f)}>
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full font-display text-sm leading-none text-bone/80 shadow-[inset_0_0_0_1px_rgba(236,231,218,.25)]">{f.mark}</span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={f.icon} alt="" className="h-6 w-6 rounded-[6px]" />
                     <span className="font-serif text-lg">{f.name}</span>
                     <span className="ml-auto font-type text-[10px] uppercase tracking-[0.2em] text-ash">Install ↗</span>
                   </button>

@@ -4,7 +4,7 @@ import { rpcUrl } from "./config";
 let id = 0;
 
 /** Minimal JSON-RPC call against the server RPC. Throws with the RPC's own message on error. */
-export async function rpc<T>(method: string, params: unknown[]): Promise<T> {
+export async function rpc<T>(method: string, params: unknown[] | Record<string, unknown>): Promise<T> {
   const res = await fetch(rpcUrl(), {
     method: "POST",
     headers: { "content-type": "application/json" },

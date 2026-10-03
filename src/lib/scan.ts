@@ -1,6 +1,7 @@
 import "server-only";
 import { rpc } from "./rpc";
 import { markets, solUsd, unknownMarket } from "./market";
+import { onchainMeta, withMeta } from "./meta";
 import { classify, isBurnable, type RawAccount } from "./classify";
 import { TOKEN_2022_PROGRAM, TOKEN_PROGRAM } from "./config";
 import type { ScanResult } from "./types";
@@ -54,8 +55,11 @@ export async function scanWallet(owner: string): Promise<ScanResult> {
   // Held NFTs (0 decimals, non-zero balance) are out of scope: we never want to burn art by accident.
   const raw = [...classic, ...t22].filter((a) => !(a.decimals === 0 && a.amountRaw !== "0"));
   const mk = await markets(raw.filter((a) => a.amountRaw !== "0").map((a) => a.mint));
+  // Dead tokens rarely have a market listing with a picture, and empty accounts aren't looked up at all:
+  // their face and name come from on-chain metadata instead.
+  const meta = await onchainMeta(raw.filter((a) => !mk.get(a.mint)?.icon).map((a) => a.mint));
 
-  const bags = raw.map((a) => classify(a, mk.get(a.mint) ?? unknownMarket(a.mint), owner));
+  const bags = raw.map((a) => classify(a, withMeta(mk.get(a.mint) ?? unknownMarket(a.mint), meta.get(a.mint)), owner));
   const order = { RUGGED: 0, DUST: 1, EMPTY: 2, ALIVE: 3, FROZEN: 4, STUCK: 5, PROTECTED: 6 } as const;
   bags.sort(
     (x, y) =>
