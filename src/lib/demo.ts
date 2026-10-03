@@ -1,8 +1,8 @@
-import type { Bag, ScanResult, TokenMarket, WindowStats } from "./types";
+import type { Bag, ScanResult, TokenMarket } from "./types";
 import { classify, isBurnable, type RawAccount } from "./classify";
 import { TOKEN_PROGRAM } from "./config";
 
-/** Deterministic fake base58 so demo mints look real but can never collide with a live token. */
+/** Deterministic fake base58 for the demo's token accounts (the mints are real, the wallet is not). */
 function fakeKey(seed: string, suffix = "") {
   const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   let h = 2166136261;
@@ -17,122 +17,84 @@ function fakeKey(seed: string, suffix = "") {
 
 export const DEMO_OWNER = "DeMo1111111111111111111111111111111111111111";
 
+/**
+ * The demo lot holds real Solana tokens: real mints, real names, their own logos (saved in public/demo,
+ * because their IPFS hosts rate-limit), with made-up balances. Market facts are read live from Jupiter
+ * when the demo is opened, so every status and Death Clock is the real one; `snap` is a snapshot used
+ * when Jupiter can't be reached (and by the tests).
+ */
 type Spec = {
-  sym: string;
-  name: string;
+  mint: string;
   amount: number;
-  price?: number;
-  liq?: number;
-  holders?: number;
-  s24?: WindowStats;
-  s6?: WindowStats;
-  audit?: TokenMarket["audit"];
-  organic?: number;
-  state?: "frozen";
-  none?: boolean;
-  protectedMint?: string;
-  empty?: boolean;
+  snap: { symbol: string; name: string; decimals: number; price: number | null; liq: number | null; holders: number | null; launchpad?: string };
 };
 
 const SPECS: Spec[] = [
-  // The dead.
-  { sym: "HOPIUM", name: "Hopium Finance", amount: 4_812_330, none: true },
-  { sym: "COPECAT", name: "Cope Cat", amount: 12_090_441, price: 0.0000004, liq: 61, holders: 211 },
-  { sym: "MOONPIG", name: "Moon Pig", amount: 880_120, price: 0.0000019, liq: 140, holders: 96 },
-  { sym: "RUGRAT", name: "Rug Rat", amount: 2_500_000, none: true },
-  { sym: "LAMBOS", name: "Lambos For All", amount: 31_500, price: 0.00071, liq: 302, holders: 418 },
-  { sym: "DEADBEEF", name: "Dead Beef", amount: 9_999_999, none: true },
-  { sym: "FROGGO", name: "Froggo", amount: 120_400, price: 0.0000061, liq: 2_900, holders: 1_204 },
-  { sym: "NOODLE", name: "Wet Noodle", amount: 64_200, price: 0.0000088, liq: 7_100, holders: 2_018 },
-  { sym: "GRAVY", name: "Gravy Train", amount: 0, empty: true },
-  { sym: "SNEK", name: "Snek", amount: 0, empty: true },
-  { sym: "PUMPKINZ", name: "Pumpkinz", amount: 0, empty: true },
-  { sym: "AIRDROP", name: "Claim reward at …", amount: 1_000, none: true },
-  { sym: "HONEY", name: "Honeypot Inu", amount: 777_000, price: 0.00002, liq: 18_000, holders: 640, state: "frozen" },
-  // The living — fed to the Deathwatch.
-  {
-    sym: "GIGACHAD", name: "Giga Chad Coin", amount: 410_000, price: 0.00094, liq: 3_400, holders: 3_120,
-    s24: { priceChange: -71, liquidityChange: -64, holderChange: -18, volumeChange: -82 },
-    s6: { priceChange: -38, liquidityChange: -41, buyVolume: 1_200, sellVolume: 4_900, numNetBuyers: -44 },
-    audit: { mintAuthorityDisabled: true, freezeAuthorityDisabled: true, topHoldersPercentage: 63, devBalancePercentage: 9.2, devMints: 41 },
-    organic: 11,
-  },
-  {
-    sym: "BLOBBY", name: "Blobby", amount: 1_920_000, price: 0.000052, liq: 14_800, holders: 2_655,
-    s24: { priceChange: -44, liquidityChange: -36, holderChange: -7, volumeChange: -58 },
-    s6: { priceChange: -22, liquidityChange: -12, buyVolume: 3_100, sellVolume: 5_600, numNetBuyers: -9 },
-    audit: { mintAuthorityDisabled: true, freezeAuthorityDisabled: false, topHoldersPercentage: 47, devBalancePercentage: 2.1, devMints: 3 },
-    organic: 34,
-  },
-  {
-    sym: "SPOOK", name: "Spook Season", amount: 88_000, price: 0.0061, liq: 92_000, holders: 8_870,
-    s24: { priceChange: -18, liquidityChange: -9, holderChange: -2, volumeChange: -31 },
-    s6: { priceChange: -6, liquidityChange: -3, buyVolume: 21_000, sellVolume: 34_500, numNetBuyers: 12 },
-    audit: { mintAuthorityDisabled: true, freezeAuthorityDisabled: true, topHoldersPercentage: 44, devBalancePercentage: 0.4, devMints: 2 },
-    organic: 18,
-  },
-  {
-    sym: "TENT", name: "Big Top", amount: 15_400, price: 0.112, liq: 1_480_000, holders: 41_200,
-    s24: { priceChange: 6, liquidityChange: 2, holderChange: 1, volumeChange: 14 },
-    s6: { priceChange: 1, liquidityChange: 0, buyVolume: 410_000, sellVolume: 398_000, numNetBuyers: 230 },
-    audit: { mintAuthorityDisabled: true, freezeAuthorityDisabled: true, topHoldersPercentage: 18, devBalancePercentage: 0, devMints: 1 },
-    organic: 88,
-  },
+  // The dead: pools drained under $500.
+  { mint: "HeUJqNNfFLNvJASi8o2CYvafUBkUiY343xQ6FT83pump", amount: 4_812_330, snap: { symbol: "shiba/acc", name: "Shiba Accelerationism", decimals: 6, price: 0.0000027, liq: 326, holders: 478, launchpad: "pump.fun" } },
+  { mint: "tHj1JQKxCV2orW48CA5Nge6MYBJJ73XuJU2pwBapump", amount: 12_090_441, snap: { symbol: "SUPERPIG", name: "Super Pig", decimals: 6, price: 0.0000025, liq: 240, holders: 353, launchpad: "pump.fun" } },
+  { mint: "oXr8P556kS1qMyAHrJ24Yan4WQWiRvuc3xENMPjpump", amount: 880_120, snap: { symbol: "ELONB", name: "ELONB", decimals: 6, price: 0.0000024, liq: 241, holders: 266, launchpad: "pump.fun" } },
+  { mint: "DcsjML99TfewNHnarcWX37drBZerR4jSzorzeSwLpump", amount: 2_500_000, snap: { symbol: "TRMPL", name: "Trumplet", decimals: 6, price: 0.0000025, liq: 293, holders: 262, launchpad: "pump.fun" } },
+  { mint: "DpgWwZ8WKEg8moFwfRAsNEhL51qyJhomBAkuEg2Vpump", amount: 31_500_000, snap: { symbol: "GMTRUMP", name: "Good Morning Trump", decimals: 6, price: 0.0000023, liq: 143, holders: 213, launchpad: "pump.fun" } },
+  { mint: "CYhrq39zMEV8GGuqE9hf5VUZzavA9DYFvtSYYwaZpump", amount: 9_999_999, snap: { symbol: "FROGYO", name: "frogyo", decimals: 6, price: 0.0000026, liq: 272, holders: 91, launchpad: "pump.fun" } },
+  // Dust: a real, deep token, but only crumbs of it.
+  { mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", amount: 2_000, snap: { symbol: "Bonk", name: "Bonk", decimals: 5, price: 0.0000037, liq: 6_113_955, holders: 1_026_207 } },
+  // Empty plots: the account is still open, the tokens long gone.
+  { mint: "9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump", amount: 0, snap: { symbol: "Fartcoin", name: "Fartcoin", decimals: 6, price: 0.17, liq: 6_670_813, holders: 192_321, launchpad: "pump.fun" } },
+  { mint: "2qEHjDLDLbuBgRYvsxhc5D6uDWAivNFZGan56P1tpump", amount: 0, snap: { symbol: "Pnut", name: "Peanut the Squirrel", decimals: 6, price: 0.054, liq: 3_713_931, holders: 88_396, launchpad: "pump.fun" } },
+  { mint: "CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump", amount: 0, snap: { symbol: "GOAT", name: "Goatseus Maximus", decimals: 6, price: 0.018, liq: 1_817_021, holders: 88_031, launchpad: "pump.fun" } },
+  // The living: the Deathwatch reads their real numbers.
+  { mint: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", amount: 120, snap: { symbol: "$WIF", name: "dogwifhat", decimals: 6, price: 0.25, liq: 7_212_606, holders: 264_754 } },
+  { mint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", amount: 400, snap: { symbol: "POPCAT", name: "Popcat", decimals: 9, price: 0.052, liq: 4_778_461, holders: 142_640 } },
+  { mint: "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5", amount: 60_000, snap: { symbol: "MEW", name: "cat in a dogs world", decimals: 5, price: 0.00052, liq: 10_915_616, holders: 158_946 } },
   // Never touched.
-  { sym: "USDC", name: "USD Coin", amount: 42.5, price: 1, liq: 9e8, holders: 3e6, protectedMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
-  { sym: "JUP", name: "Jupiter", amount: 310, price: 0.61, liq: 4e7, holders: 9e5, protectedMint: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN" },
+  { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: 42.5, snap: { symbol: "USDC", name: "USD Coin", decimals: 6, price: 1, liq: 9e8, holders: 3e6 } },
+  { mint: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", amount: 310, snap: { symbol: "JUP", name: "Jupiter", decimals: 6, price: 0.61, liq: 4e7, holders: 9e5 } },
 ];
 
-export function demoBags(owner = DEMO_OWNER): Bag[] {
+export const DEMO_MINTS = SPECS.map((s) => s.mint);
+
+export function demoBags(live?: Map<string, TokenMarket>, owner = DEMO_OWNER): Bag[] {
   return SPECS.map((s, i) => {
-    const mint = s.protectedMint ?? fakeKey(s.sym, "dead");
-    const decimals = 6;
+    const { mint, snap } = s;
     const raw: RawAccount = {
-      account: fakeKey(s.sym + i),
+      account: fakeKey(snap.symbol + i),
       mint,
       program: TOKEN_PROGRAM,
-      amountRaw: s.empty ? "0" : String(Math.round(s.amount * 10 ** decimals)),
-      decimals,
+      amountRaw: s.amount ? String(Math.round(s.amount * 10 ** snap.decimals)) : "0",
+      decimals: snap.decimals,
       uiAmount: s.amount,
       rentLamports: 2_039_280,
-      state: s.state ?? "initialized",
+      state: "initialized",
       withheld: false,
     };
-    // Ink-drawn faces for the made-up tokens; the two real ones wear their own logos.
-    const icon = `/demo/${s.sym.toLowerCase()}.webp`;
-    const market: TokenMarket = s.none
-      ? { mint, symbol: s.sym, name: s.name, icon, priceUsd: null, liquidityUsd: null, mcapUsd: null, holders: null, source: "none" }
-      : {
-          mint,
-          symbol: s.sym,
-          name: s.name,
-          icon,
-          decimals,
-          priceUsd: s.price ?? null,
-          liquidityUsd: s.liq ?? null,
-          mcapUsd: s.price ? s.price * 1e9 : null,
-          holders: s.holders ?? null,
-          organicScore: s.organic ?? null,
-          audit: s.audit,
-          stats24h: s.s24,
-          stats6h: s.s6,
-          dev: fakeKey(s.sym + "dev"),
-          launchpad: "pump.fun",
-          source: "jupiter",
-        };
+    const fallback: TokenMarket = {
+      mint,
+      symbol: snap.symbol,
+      name: snap.name,
+      decimals: snap.decimals,
+      priceUsd: snap.price,
+      liquidityUsd: snap.liq,
+      mcapUsd: null,
+      holders: snap.holders,
+      launchpad: snap.launchpad,
+      source: "jupiter",
+    };
+    // Local copy of the token's own logo: its IPFS host turns busy pages away.
+    const market = { ...(live?.get(mint) ?? fallback), icon: `/demo/${mint.slice(0, 8)}.webp` };
     return classify(raw, market, owner);
   });
 }
 
-export function demoScan(): ScanResult {
-  const bags = demoBags();
+export function demoScan(live?: Map<string, TokenMarket>, solUsd?: number | null): ScanResult {
+  const bags = demoBags(live);
   const order = { RUGGED: 0, DUST: 1, EMPTY: 2, ALIVE: 3, FROZEN: 4, STUCK: 5, PROTECTED: 6 } as const;
   bags.sort((x, y) => order[x.status] - order[y.status] || (y.death?.score ?? 0) - (x.death?.score ?? 0));
   const burnable = bags.filter(isBurnable);
   return {
     owner: DEMO_OWNER,
     scannedAt: new Date().toISOString(),
-    solUsd: 182.4,
+    solUsd: solUsd ?? 182.4,
     bags,
     totals: {
       burnable: burnable.length,

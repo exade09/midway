@@ -166,14 +166,27 @@ function Stat({ k, v, f, hi, brass }: { k: string; v: number; f: (n: number) => 
   );
 }
 
+/** Public IPFS gateways to try, in order, when a token's picture sits on a host that turns us away (ipfs.io answers 429 under load). */
+const GATEWAYS = ["https://gateway.pinata.cloud/ipfs/", "https://dweb.link/ipfs/", "https://ipfs.io/ipfs/"];
+
+function iconSources(src?: string): string[] {
+  if (!src) return [];
+  if (src.startsWith("ipfs://")) return GATEWAYS.map((g) => g + src.slice(7));
+  const path = src.match(/^https?:\/\/[^/]+\/ipfs\/(.+)$/); // gateway.example/ipfs/<cid>/...
+  const sub = src.match(/^https?:\/\/([a-z0-9]+)\.ipfs\.[^/]+(\/.*)?$/i); // <cid>.ipfs.example/...
+  const cid = path?.[1] ?? (sub ? sub[1] + (sub[2] ?? "") : null);
+  return cid ? [src, ...GATEWAYS.map((g) => g + cid).filter((u) => u !== src)] : [src];
+}
+
 function TokenIcon({ bag }: { bag: Bag }) {
-  const [err, setErr] = useState(false);
-  const src = bag.market.icon;
+  const sources = iconSources(bag.market.icon);
+  const [tries, setTries] = useState(0);
+  const src = sources[tries];
   return (
     <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-ink-3 ring-1 ring-bone/10">
-      {src && !err ? (
+      {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="h-full w-full object-cover grayscale-[.6]" onError={() => setErr(true)} loading="lazy" />
+        <img key={src} src={src} alt="" className="h-full w-full object-cover grayscale-[.6]" onError={() => setTries((t) => t + 1)} loading="lazy" />
       ) : (
         <span className="flex h-full w-full items-center justify-center font-display text-sm text-ash-2">{bag.market.symbol.slice(0, 2)}</span>
       )}

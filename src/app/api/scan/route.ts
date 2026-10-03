@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { scanWallet } from "@/lib/scan";
-import { demoScan } from "@/lib/demo";
+import { DEMO_MINTS, demoScan } from "@/lib/demo";
+import { markets, solUsd } from "@/lib/market";
 import { isPubkey } from "@/lib/rpc";
 import type { ScanResult } from "@/lib/types";
 
@@ -14,7 +15,11 @@ const TTL = 15_000;
 export async function GET(req: NextRequest) {
   const owner = req.nextUrl.searchParams.get("owner");
   const fresh = req.nextUrl.searchParams.has("fresh");
-  if (owner === "demo") return Response.json(demoScan());
+  if (owner === "demo") {
+    // Real tokens, read live; if Jupiter is down the demo falls back to its snapshot.
+    const [live, sol] = await Promise.all([markets(DEMO_MINTS).catch(() => undefined), solUsd().catch(() => null)]);
+    return Response.json(demoScan(live, sol));
+  }
   if (!isPubkey(owner)) return Response.json({ error: "Bad wallet address" }, { status: 400 });
   const hit = cache.get(owner);
   if (hit && !fresh && Date.now() - hit.at < TTL) return Response.json(hit.data);
