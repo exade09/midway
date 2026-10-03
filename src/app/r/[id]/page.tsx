@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!r) return {};
   const n = r.burials.length;
   return {
-    title: `Stub No. ${String(r.id).padStart(6, "0")} — Midway`,
+    title: "Midway",
     description: `${n} dead ${n === 1 ? "bag" : "bags"} buried. ${r.tickets.toFixed(1)} tickets for tonight's draw.`,
   };
 }

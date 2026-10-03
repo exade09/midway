@@ -9,7 +9,7 @@ import { SITE_URL, X_HANDLE } from "@/lib/config";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Midway — the carnival for dead bags",
+  title: "Midway",
   description: "Bury rugged Solana tokens, take your SOL rent back, and every real loss is a ticket to tonight's draw. The Barker reads which of your living bags is next.",
   openGraph: {
     title: "Midway — hand over a dead bag",

@@ -41,13 +41,8 @@ export function TopBar({
     <header className="relative z-20 px-4 pt-4 lg:px-8">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-5">
-          <Link href="/" className="flex items-center gap-3" aria-label="Midway home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/art/barker.webp" alt="" className="hidden h-9 w-9 rounded-full ring-1 ring-bone/15 sm:block" />
-            <div>
-              <div className="font-display text-[22px] leading-none tracking-[0.06em] sm:text-[26px]">MIDWAY</div>
-              <div className="bulbs mt-1 h-1 w-full opacity-70" />
-            </div>
+          <Link href="/" className="font-display text-[24px] leading-none tracking-[0.06em] sm:text-[28px]" aria-label="Midway home">
+            MIDWAY
           </Link>
           <nav className="hidden items-center gap-1 xl:flex">
             <NavButton onClick={onGraveyard}>Graveyard</NavButton>

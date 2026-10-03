@@ -79,4 +79,4 @@ Without `DATABASE_URL`, data goes to `/tmp/midway-store.json` — fine locally, 
 
 ## Art
 
-The scene is drawn in code — `components/Skyline.tsx` (horizon, Ferris wheel, tents, crosses, hanging lamp) — so it stays sharp at any size and weighs almost nothing. The only bitmap is the Barker's portrait, `public/art/barker.webp`; his eyes are measured off it in `PORTRAIT_EYES` (`components/BarkerPanel.tsx`) — re-measure if you replace the image.
+The backdrop is a shader — "Crepuscular sphere" from fragcoord.xyz (`components/Sphere.tsx`), ported to WebGL2, tinted toward the lamp green and rendered at reduced resolution so it stays light. Without WebGL2 a CSS gradient stands in. The only bitmap is the Barker's portrait, `public/art/barker.webp`; his eyes are measured off it in `PORTRAIT_EYES` (`components/BarkerPanel.tsx`) — re-measure if you replace the image.
