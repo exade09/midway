@@ -232,6 +232,9 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
     return () => clearTimeout(id);
   }, [owner, entered, runScan]);
 
+  // Already in the demo (say, opened with ?demo=1): nothing changes, so the reading has to be started by hand.
+  const walkDemo = () => (demo ? void runScan("demo", true) : setDemo(true));
+
   const focusBag = (b: Bag) => {
     setFocus(b.account);
     setMood(b.status === "ALIVE" ? ((b.death?.score ?? 0) >= 50 ? "grave" : "idle") : isBurnable(b) ? "glee" : "grave");
@@ -347,7 +350,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
 
   const left =
     phase === "lot" || (phase === "receipt" && !scan) ? (
-      <Gate key="gate" onDemo={() => setDemo(true)} stats={yard?.stats} />
+      <Gate key="gate" onDemo={walkDemo} stats={yard?.stats} />
     ) : phase === "scan" ? (
       <ScanCard key="scan" found={tags.length} />
     ) : scan ? (
@@ -370,7 +373,7 @@ export function Midway({ initialReceipt = null }: { initialReceipt?: Receipt | n
     <main className="relative flex min-h-dvh flex-col lg:h-dvh">
       <Stage phase={phase} mood={mood} tags={tags} flare={flare} />
 
-      <AnimatePresence>{entered && <TopBarIn key="top" draw={draw} demo={demo} onGraveyard={() => setYardOpen(true)} onDemo={() => setDemo(true)} onLeaveDemo={() => { setDemo(false); setScan(null); setEarned(0); }} />}</AnimatePresence>
+      <AnimatePresence>{entered && <TopBarIn key="top" draw={draw} demo={demo} onGraveyard={() => setYardOpen(true)} onDemo={walkDemo} onLeaveDemo={() => { setDemo(false); setScan(null); setEarned(0); }} />}</AnimatePresence>
 
       <AnimatePresence mode="wait">
         {entered && ACTS[phase] && (

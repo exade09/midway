@@ -7,26 +7,60 @@ import { short, usd } from "@/lib/format";
 const SPEED = 60;
 const GAP = 48;
 
+/** The Barker's patter between the graves. No full stops at the end: it's a sign, not a paragraph. */
+const LINES = [
+  "The lot is open. The ground is soft. First burial of the night wins the Barker's respect",
+  "Paste any token into the Barker's rap sheet to see what its deployer has buried before",
+  "Every real loss is a ticket. The draw closes at 21:00 MSK",
+  "Nobody sells a rug. Anybody can bury one",
+  "The rent under every grave comes home — about ◎0.002 apiece",
+  "Your own launches don't count. The Barker checks",
+];
+
+/** Small seeded shuffle, so the server and the browser draw the same order and React doesn't complain. */
+function rng(seed: number) {
+  return () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+}
+
+function Grave({ b }: { b: Burial }) {
+  return (
+    <span className="flex items-center gap-2 whitespace-nowrap">
+      <span className="text-brass/70">✝</span>
+      <span className="font-display text-[15px] text-bone">${b.symbol}</span>
+      <span className="text-ash">buried by</span>
+      <span className="font-mono text-[12px] text-ash-2">{short(b.owner)}</span>
+      {b.lossUsd ? <span className="text-blood/90">— cost them {usd(b.lossUsd)}</span> : <span className="text-ash">— rent reclaimed</span>}
+    </span>
+  );
+}
+
 /**
- * The bottom marquee: every burial on the lot, scrolling past right to left like a carnival sign.
+ * The bottom marquee: the Barker's lines with real burials from the lot between them —
+ * one to three random graves after each line. Only burials that happened are shown; on a quiet night it's just his patter.
  * One set is measured, then repeated enough times to cover the screen twice over; the strip slides
  * by exactly one set and starts again, so the seam never shows and it never stops.
  */
 export function Ticker({ feed }: { feed: Burial[] }) {
-  const items = feed.length
-    ? feed.map((b) => (
-        <span key={b.sig + b.mint} className="flex items-center gap-2 whitespace-nowrap">
-          <span className="text-brass/70">✝</span>
-          <span className="font-display text-[15px] text-bone">${b.symbol}</span>
-          <span className="text-ash">buried by</span>
-          <span className="font-mono text-[12px] text-ash-2">{short(b.owner)}</span>
-          {b.lossUsd ? <span className="text-blood/90">— cost them {usd(b.lossUsd)}</span> : <span className="text-ash">— rent reclaimed</span>}
-        </span>
-      ))
-    : [
-        <span key="a" className="whitespace-nowrap text-ash-2">✝ The lot is open. The ground is soft. First burial of the night wins the Barker&apos;s respect</span>,
-        <span key="b" className="whitespace-nowrap text-ash-2">✝ Paste any token into the Barker&apos;s rap sheet to see what its deployer has buried before</span>,
-      ];
+  const seed = feed.length * 7919 + (feed[0]?.sig.charCodeAt(0) ?? 0);
+  const rand = rng(seed || 1);
+  const pool = [...feed].sort(() => rand() - 0.5);
+  const items: React.ReactNode[] = [];
+  let g = 0;
+  LINES.forEach((line, i) => {
+    items.push(<span key={"l" + i} className="whitespace-nowrap text-ash-2">✝ {line}</span>);
+    // Each grave once per set: a short feed is never padded by repeating it.
+    const n = Math.min(1 + Math.floor(rand() * 3), pool.length - g);
+    for (let k = 0; k < n; k++) {
+      const b = pool[g++];
+      items.push(<Grave key={`g${i}-${b.sig}${b.mint}`} b={b} />);
+    }
+  });
+  // A busy lot has more graves than lines: let the rest through too, a line every few.
+  while (g < pool.length) {
+    const b = pool[g++];
+    items.push(<Grave key={`r${g}-${b.sig}${b.mint}`} b={b} />);
+    if (g % 3 === 0) items.push(<span key={"x" + g} className="whitespace-nowrap text-ash-2">✝ {LINES[g % LINES.length]}</span>);
+  }
 
   const setRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);

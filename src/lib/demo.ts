@@ -98,12 +98,15 @@ export function demoBags(owner = DEMO_OWNER): Bag[] {
       state: s.state ?? "initialized",
       withheld: false,
     };
+    // Ink-drawn faces for the made-up tokens; the two real ones wear their own logos.
+    const icon = `/demo/${s.sym.toLowerCase()}.webp`;
     const market: TokenMarket = s.none
-      ? { mint, symbol: s.sym, name: s.name, priceUsd: null, liquidityUsd: null, mcapUsd: null, holders: null, source: "none" }
+      ? { mint, symbol: s.sym, name: s.name, icon, priceUsd: null, liquidityUsd: null, mcapUsd: null, holders: null, source: "none" }
       : {
           mint,
           symbol: s.sym,
           name: s.name,
+          icon,
           decimals,
           priceUsd: s.price ?? null,
           liquidityUsd: s.liq ?? null,
