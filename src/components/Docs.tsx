@@ -130,7 +130,7 @@ function DocsBody() {
           <Chapter id="burial" n={1} title="Burying a bag">
             <Steps
               items={[
-                ["Connect", "Phantom, Solflare, Backpack or any Wallet-Standard wallet. Connecting only shares your public address."],
+                ["Connect", "Phantom, Solflare or Backpack. Connecting only shares your public address."],
                 ["Read", "Midway lists every SPL and Token-2022 account you own and looks up each token's market on Jupiter, falling back to DexScreener."],
                 ["Choose", "Buryable bags are pre-selected. Untick anything you want to keep."],
                 ["Sign", "Your wallet shows the transactions. Up to seven graves fit in one transaction."],

@@ -176,10 +176,10 @@ export function ContractPill({ compact }: { compact?: boolean }) {
     <button
       onClick={copy}
       title={live ? `${TOKEN_CA} — click to copy` : "Token launching soon"}
-      className={`group flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-[2px] px-3 shadow-[inset_0_0_0_1px_rgba(201,166,90,.35)] transition-[box-shadow,background] hover:bg-brass/[.06] hover:shadow-[inset_0_0_0_1px_rgba(201,166,90,.7),0_0_24px_-6px_rgba(201,166,90,.5)] ${compact ? "h-8 px-2.5" : ""}`}
+      className={`group flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[2px] px-3 shadow-[inset_0_0_0_1px_rgba(201,166,90,.35)] transition-[box-shadow,background] hover:bg-brass/[.06] hover:shadow-[inset_0_0_0_1px_rgba(201,166,90,.7),0_0_24px_-6px_rgba(201,166,90,.5)] ${compact ? "h-8 px-2.5" : ""}`}
     >
-      <span className="font-type text-[10px] uppercase tracking-[0.22em] text-brass">CA</span>
-      <span className="font-mono text-[12px] text-bone/90">{live ? short(TOKEN_CA, compact ? 4 : 5) : "soon"}</span>
+      <span className="font-type text-[10px] uppercase leading-none tracking-[0.22em] text-brass">CA</span>
+      <span className="font-mono text-[12px] leading-none text-bone/90">{live ? short(TOKEN_CA, compact ? 4 : 5) : "soon"}</span>
       {live && (
         <span className="relative h-3.5 w-3.5 text-ash-2 transition-colors group-hover:text-brass">
           <AnimatePresence mode="wait" initial={false}>
@@ -239,9 +239,21 @@ export function WalletButton({ demo, onDemo, onLeaveDemo, big }: { demo: boolean
   );
 }
 
+/** The wallets the booth always offers. Others found in the browser are listed after them — except MetaMask, which never is. */
+const FEATURED = [
+  { name: "Phantom", mark: "P", install: "https://phantom.com/download", browse: (u: string) => `https://phantom.app/ul/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
+  { name: "Solflare", mark: "S", install: "https://solflare.com/download", browse: (u: string) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(u)}?ref=${encodeURIComponent(u)}` },
+  { name: "Backpack", mark: "B", install: "https://backpack.app/download", browse: null },
+] as const;
+const BANNED = /metamask/i;
+
 function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () => void; onDemo: () => void }) {
   const { wallets, select, connect, wallet } = useWallet();
-  const usable = wallets.filter((w) => w.readyState === WalletReadyState.Installed || w.readyState === WalletReadyState.Loadable);
+  const usable = wallets.filter(
+    (w) => (w.readyState === WalletReadyState.Installed || w.readyState === WalletReadyState.Loadable) && !BANNED.test(w.adapter.name),
+  );
+  const found = (name: string) => usable.find((w) => w.adapter.name.toLowerCase().startsWith(name.toLowerCase()));
+  const others = usable.filter((w) => !FEATURED.some((f) => w.adapter.name.toLowerCase().startsWith(f.name.toLowerCase())));
 
   // With autoConnect on, selecting a new wallet connects by itself. Re-picking the already-selected
   // wallet changes nothing in the provider, so that case needs an explicit connect().
@@ -250,7 +262,13 @@ function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () =>
     if (wallet?.adapter.name === name) connect().catch(() => {});
     else select(name);
   };
+  // Not installed: on a phone, open the lot inside the wallet's own browser; elsewhere, go get it.
+  const fetchWallet = (f: (typeof FEATURED)[number]) => {
+    const phone = typeof navigator !== "undefined" && /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    window.open(phone && f.browse ? f.browse(window.location.href) : f.install, "_blank", "noopener");
+  };
 
+  const row = "btn btn-ghost justify-start gap-3 normal-case tracking-normal";
   return (
     <AnimatePresence>
       {open && (
@@ -267,13 +285,25 @@ function WalletPicker({ open, onClose, onDemo }: { open: boolean; onClose: () =>
             <h3 className="mt-1 font-display text-3xl">Show your wallet</h3>
             <div className="ink-rule my-4" />
             <div className="flex flex-col gap-2">
-              {usable.length === 0 && <p className="font-serif text-ash-2">No Solana wallet found in this browser. Install Phantom, Solflare or Backpack — or walk the demo lot.</p>}
-              {usable.map((w) => (
-                <button
-                  key={w.adapter.name}
-                  className="btn btn-ghost justify-start gap-3 normal-case tracking-normal"
-                  onClick={() => pick(w.adapter.name)}
-                >
+              {FEATURED.map((f) => {
+                const w = found(f.name);
+                return w ? (
+                  <button key={f.name} className={row} onClick={() => pick(w.adapter.name)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={w.adapter.icon} alt="" className="h-6 w-6" />
+                    <span className="font-serif text-lg">{f.name}</span>
+                    <span className="ml-auto font-type text-[10px] uppercase tracking-[0.2em] text-lamp">Detected</span>
+                  </button>
+                ) : (
+                  <button key={f.name} className={`${row} opacity-80 hover:opacity-100`} onClick={() => fetchWallet(f)}>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full font-display text-sm leading-none text-bone/80 shadow-[inset_0_0_0_1px_rgba(236,231,218,.25)]">{f.mark}</span>
+                    <span className="font-serif text-lg">{f.name}</span>
+                    <span className="ml-auto font-type text-[10px] uppercase tracking-[0.2em] text-ash">Install ↗</span>
+                  </button>
+                );
+              })}
+              {others.map((w) => (
+                <button key={w.adapter.name} className={row} onClick={() => pick(w.adapter.name)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={w.adapter.icon} alt="" className="h-6 w-6" />
                   <span className="font-serif text-lg">{w.adapter.name}</span>
