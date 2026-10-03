@@ -24,15 +24,24 @@ export function Gate({ onDemo, stats }: { onDemo: () => void; stats?: GraveyardD
       className="flex max-w-[560px] flex-col justify-center"
     >
       <div className="label text-lamp/80">Open nightly · Solana</div>
-      <h2 className="mt-3 font-display text-[clamp(44px,5.4vw,78px)] leading-[0.92]">
+      <h2 className="mt-3 font-display text-[clamp(40px,min(5.4vw,8.6vh),78px)] leading-[0.92]">
         Hand over
         <br />a dead bag.
       </h2>
-      <p className="mt-5 max-w-[30rem] font-serif text-[19px] leading-relaxed text-bone/80">
+      <p className="mt-[clamp(12px,2.4vh,20px)] max-w-[30rem] font-serif text-[19px] leading-relaxed text-bone/80">
         Nobody sells a rug. But you can bury it — get your SOL rent back, and every real loss is a ticket to tonight&apos;s pot.
       </p>
 
-      <ol className="mt-8 flex flex-col gap-4">
+      {/* The way in comes first, so it is never below the fold. */}
+      <div className="mt-[clamp(16px,3vh,28px)] flex flex-wrap items-center gap-3">
+        <WalletButton demo={false} onDemo={onDemo} onLeaveDemo={() => {}} big />
+        <button className="btn btn-ghost px-6 py-4" onClick={onDemo}>
+          Walk the demo lot
+        </button>
+      </div>
+      <p className="mt-3 font-serif text-sm italic text-ash">Read-only until you sign. Stablecoins and blue-chips are never offered for burial.</p>
+
+      <ol className="mt-[clamp(20px,4vh,36px)] flex flex-col gap-[clamp(8px,1.6vh,16px)] border-t border-bone/10 pt-[clamp(16px,3vh,28px)]">
         {RULES.map(([n, t, d], i) => (
           <motion.li
             key={n}
@@ -50,20 +59,13 @@ export function Gate({ onDemo, stats }: { onDemo: () => void; stats?: GraveyardD
         ))}
       </ol>
 
-      <div className="mt-9 flex flex-wrap items-center gap-3">
-        <WalletButton demo={false} onDemo={onDemo} onLeaveDemo={() => {}} big />
-        <button className="btn btn-ghost px-6 py-4" onClick={onDemo}>
-          Walk the demo lot
-        </button>
-      </div>
-      <p className="mt-4 font-serif text-sm italic text-ash">Read-only until you sign. Stablecoins and blue-chips are never offered for burial.</p>
 
       {stats && stats.graves > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.4, duration: 1 }}
-          className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-bone/10 pt-5 font-mono text-[13px] tabular text-ash-2"
+          className="mt-[clamp(16px,3vh,32px)] flex flex-wrap gap-x-6 gap-y-2 font-mono text-[13px] tabular text-ash-2"
         >
           <span><b className="font-medium text-bone">{stats.graves.toLocaleString("en-US")}</b> graves dug</span>
           <span><b className="font-medium text-lamp">◎{sol(stats.rentLamports, 2)}</b> rent sent home</span>

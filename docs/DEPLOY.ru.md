@@ -7,7 +7,7 @@
 | Helius API key | скан кошельков, проверка сжиганий, история свапов для оценки потерь | helius.dev → бесплатный тариф |
 | Отдельный кошелёк банка | получает долю ренты с каждого сжигания и платит победителю | новый кошелёк, только под Midway |
 | Neon (Postgres) | квитанции, кладбище, розыгрыши | Vercel → Storage → Neon |
-| Anthropic API key (необязательно) | Зазывала пишет реплики сам, а не по шаблонам | console.anthropic.com |
+| OpenAI или Anthropic API key (необязательно) | Зазывала пишет реплики сам, а не по шаблонам. OpenAI берётся первым | platform.openai.com / console.anthropic.com |
 
 ## 2. GitHub → Vercel
 
@@ -36,7 +36,10 @@ CRON_SECRET=<любая длинная случайная строка>
 DATABASE_URL=<ставится сам при подключении Neon>
 NEXT_PUBLIC_SITE_URL=https://<ваш домен>
 NEXT_PUBLIC_TOKEN_CA=                # пусто → в шапке «soon»; после запуска токена — CA
-ANTHROPIC_API_KEY=                   # по желанию
+OPENAI_API_KEY=                      # по желанию, реплики Зазывалы (GPT)
+OPENAI_MODEL=gpt-5.6                 # по желанию
+OPENAI_REASONING=low                 # по желанию: none | low | medium | high
+ANTHROPIC_API_KEY=                   # по желанию, если нет OpenAI
 DRAW_PAYOUT_SECRET=                  # по желанию, см. ниже
 ```
 

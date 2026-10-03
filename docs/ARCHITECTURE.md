@@ -56,7 +56,7 @@ Tables are created on first use. Without `DATABASE_URL` the same interface write
 
 One page, five acts driven by `phase` in `Midway.tsx`: `lot → scan → ledger → ritual → receipt`.
 
-- `Stage.tsx` + `Sphere.tsx` — the backdrop: the "Crepuscular sphere" raymarching shader (WebGL2, half resolution, paused when hidden). It turns faster while a wallet is read, floods with light at a burial and warms to amber on a grim reading. Camera moves per act.
+- `Stage.tsx` + `Backdrop.tsx` — the backdrop: the ink-drawn lot (`public/art/lot.webp`) in a WebGL2 shader — fog drifting over the graves, the green lantern breathing and sputtering, the watcher blinking, paper grain. Framed so the lantern sits in the open middle between the panels. The fog runs while a wallet is read, the lantern flares at a burial and turns amber on a grim reading. Camera moves per act.
 - `BarkerPanel.tsx` — the Barker's portrait; his eyes (`Eyes.tsx`) follow the pointer and change with his mood.
 - `Polish.tsx` — counting numbers, the rolling countdown, and the pointer light on panels.
 - `sound.ts` — every sound is synthesised with Web Audio; starts on the first click, mute persists.

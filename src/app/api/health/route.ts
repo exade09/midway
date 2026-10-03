@@ -13,7 +13,7 @@ export async function GET() {
     potWallet: !!POT_WALLET,
     cronSecret: !!process.env.CRON_SECRET,
     autoPayout: !!process.env.DRAW_PAYOUT_SECRET,
-    barkerLLM: !!process.env.ANTHROPIC_API_KEY,
+    barkerLLM: !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY),
     tokenCA: !!TOKEN_CA,
   };
   const required = checks.heliusKey && checks.database && checks.potWallet && checks.cronSecret;

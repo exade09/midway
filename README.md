@@ -29,7 +29,8 @@ Built for **Vercel**: Next.js 16 (App Router), Neon Postgres, Vercel Cron.
    | `NEXT_PUBLIC_POT_CUT_BPS` | — | Pot cut of reclaimed rent, basis points. Default `500` (5%) |
    | `NEXT_PUBLIC_DRAW_HOUR_UTC` | — | Hour the draw closes. Default `18` (21:00 MSK) |
    | `DRAW_PAYOUT_SECRET` | — | Pot wallet secret key as a JSON byte array, for automatic payouts. Empty → pay by hand |
-   | `ANTHROPIC_API_KEY` | — | Lets Claude write the Barker's lines. Empty → templated lines |
+   | `OPENAI_API_KEY` | — | Lets GPT write the Barker's lines (`OPENAI_MODEL`, default `gpt-5.6`; `OPENAI_REASONING`, default `low`). Tried first |
+   | `ANTHROPIC_API_KEY` | — | Lets Claude write the Barker's lines when there's no OpenAI key. Neither → templated lines |
    | `NEXT_PUBLIC_SITE_URL` | — | Your domain. Defaults to Vercel's production URL |
 
    `NEXT_PUBLIC_*` values are baked in at build time — redeploy after changing them.
@@ -46,7 +47,7 @@ The draw cron is already in `vercel.json` (18:03 UTC, retry 18:20). It works on 
 | **Scan** | `lib/scan.ts` | SPL + Token-2022 accounts via Helius; markets from Jupiter Tokens v2, DexScreener fallback. Held NFTs are skipped. Cached 15 s per wallet. |
 | **Classify** | `lib/classify.ts` | `RUGGED` (no market / pool < $500), `DUST` (< $1), `EMPTY` are buryable. `FROZEN`, `STUCK`, `PROTECTED` never are. |
 | **Death Clock** | `lib/deathwatch.ts` | 0–100 from named symptoms: pool depth & bleed, price, holder exodus, sell pressure, volume collapse, whales, live mint/freeze authority, dev bag, serial launcher, bots. |
-| **The Barker** | `/api/barker` | Streams his line — Claude when keyed, templates otherwise. |
+| **The Barker** | `/api/barker` | Streams his line — GPT or Claude when keyed, templates otherwise. |
 | **Burn** | `lib/burn.ts` | Client-built: `burnChecked` + `closeAccount` per bag, ≤ 7 per tx, `MIDWAY` memo, pot cut as a SOL transfer. The user signs everything. |
 | **Relay** | `/api/rpc` | Forwards only transactions carrying the `MIDWAY` memo, so the Helius key can't be used for anything else. |
 | **Record** | `/api/burn/record` | Re-reads every signature from chain; trusts only what it proves. Replays rejected. |
@@ -79,4 +80,4 @@ Without `DATABASE_URL`, data goes to `/tmp/midway-store.json` — fine locally, 
 
 ## Art
 
-The backdrop is a shader — "Crepuscular sphere" from fragcoord.xyz (`components/Sphere.tsx`), ported to WebGL2, tinted toward the lamp green and rendered at reduced resolution so it stays light. Without WebGL2 a CSS gradient stands in. The only bitmap is the Barker's portrait, `public/art/barker.webp`; his eyes are measured off it in `PORTRAIT_EYES` (`components/BarkerPanel.tsx`) — re-measure if you replace the image.
+The backdrop is the Midway banner itself, `public/art/lot.webp`, brought to life in WebGL2 (`components/Backdrop.tsx`): drifting fog, a breathing green lantern on the wheel, a watcher who blinks, crawling paper grain. The lantern and the watcher's eyes are measured off the plate in `LANTERN` and `EYES` — re-measure if you replace the image. Without WebGL2 the plain plate is shown. The Barker's portrait is `public/art/barker.webp`; his eyes are measured off it in `PORTRAIT_EYES` (`components/BarkerPanel.tsx`).

@@ -241,6 +241,9 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 .scroll-ink::-webkit-scrollbar-thumb { background: rgba(236, 231, 218, 0.1); border-radius: 3px; }
 .scroll-ink:hover::-webkit-scrollbar-thumb { background: rgba(90, 232, 168, 0.35); }
 .scroll-ink::-webkit-scrollbar-track { background: transparent; }
+/* Columns that only scroll on short screens: no visible track over the scene. */
+.scroll-quiet { scrollbar-width: none; }
+.scroll-quiet::-webkit-scrollbar { display: none; }
 
 /* Fade list edges so rows slide out of the dark instead of hitting a hard edge. */
 .fade-y {

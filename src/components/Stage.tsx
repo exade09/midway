@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Mood } from "./Eyes";
-import { Sphere } from "./Sphere";
+import { Backdrop } from "./Backdrop";
 import { sound } from "@/lib/sound";
 import { ease } from "@/lib/motion";
 
@@ -17,7 +17,8 @@ const CAMERA: Record<Phase, { scale: number; filter: string }> = {
   receipt: { scale: 1.05, filter: "brightness(0.55) blur(3px)" },
 };
 
-const SPEED: Record<Phase, number> = { intro: 0.4, lot: 1, scan: 3.2, ledger: 0.8, ritual: 2.4, receipt: 0.5 };
+/** How fast the fog runs over the lot in each act. */
+const SPEED: Record<Phase, number> = { intro: 0.5, lot: 1, scan: 3, ledger: 0.8, ritual: 2.2, receipt: 0.5 };
 
 export interface RisingTag {
   id: string;
@@ -26,9 +27,9 @@ export interface RisingTag {
 }
 
 /**
- * The scene behind everything: one slowly turning sphere pouring light through its cracks.
- * It follows the story — turns faster while the wallet is read, flares at a burial,
- * warms toward amber when the Barker reads something grim — and never competes with the panels.
+ * The scene behind everything: the ink-drawn lot at night, fog over the graves, one green lantern on the wheel.
+ * It follows the story — the fog runs while the wallet is read, the lantern flares at a burial
+ * and warms toward amber when the Barker reads something grim — and never competes with the panels.
  */
 export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; mood: Mood; tags?: RisingTag[]; flare?: number }) {
   const [glow, setGlow] = useState(0);
@@ -43,7 +44,7 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
     return () => clearTimeout(id);
   }, [phase]);
 
-  // A burial floods the sphere with light for a moment.
+  // A burial flares the lantern for a moment.
   useEffect(() => {
     if (!flare) return;
     const a = setTimeout(() => setGlow(1.4), 0);
@@ -54,7 +55,7 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
     };
   }, [flare]);
 
-  const tint: [number, number, number] = mood === "grave" ? [1.0, 0.72, 0.45] : [0.55, 1.0, 0.8];
+  const tint: [number, number, number] = mood === "grave" ? [1.0, 0.62, 0.3] : [0.3, 0.88, 0.63];
   const cam = CAMERA[phase];
 
   return (
@@ -65,7 +66,7 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
         animate={phase === "ritual" ? { ...cam, x: [0, -3, 4, -2, 1, 0] } : { ...cam, x: 0 }}
         transition={{ duration: phase === "lot" ? 2.4 : 1.6, ease: ease.inOut, x: { duration: 0.6, delay: 0.8 } }}
       >
-        <Sphere speed={SPEED[phase]} glow={glow + (phase === "scan" ? 0.25 : 0)} tint={tint} />
+        <Backdrop speed={SPEED[phase]} glow={glow + (phase === "scan" ? 0.25 : 0)} tint={tint} />
 
         {/* Names rising out of the light as the scan finds them. */}
         <AnimatePresence>
@@ -83,7 +84,7 @@ export function Stage({ phase, mood, tags = [], flare = 0 }: { phase: Phase; moo
 }
 
 function GraveTag({ tag, i }: { tag: RisingTag; i: number }) {
-  // Tags float up around the sphere, in the open middle of the frame.
+  // Tags float up out of the fog, in the open middle of the frame.
   const slots = [38, 61, 44, 66, 49, 35, 57, 41, 63, 47, 69, 53];
   const left = slots[i % slots.length] + ((i * 7) % 5) - 2;
   const top = 62 + ((i * 13) % 16);
