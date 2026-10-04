@@ -30,13 +30,12 @@ type Spec = {
 };
 
 const SPECS: Spec[] = [
-  // The dead: pools drained under $500.
-  { mint: "HeUJqNNfFLNvJASi8o2CYvafUBkUiY343xQ6FT83pump", amount: 4_812_330, snap: { symbol: "shiba/acc", name: "Shiba Accelerationism", decimals: 6, price: 0.0000027, liq: 326, holders: 478, launchpad: "pump.fun" } },
-  { mint: "tHj1JQKxCV2orW48CA5Nge6MYBJJ73XuJU2pwBapump", amount: 12_090_441, snap: { symbol: "SUPERPIG", name: "Super Pig", decimals: 6, price: 0.0000025, liq: 240, holders: 353, launchpad: "pump.fun" } },
-  { mint: "oXr8P556kS1qMyAHrJ24Yan4WQWiRvuc3xENMPjpump", amount: 880_120, snap: { symbol: "ELONB", name: "ELONB", decimals: 6, price: 0.0000024, liq: 241, holders: 266, launchpad: "pump.fun" } },
-  { mint: "DcsjML99TfewNHnarcWX37drBZerR4jSzorzeSwLpump", amount: 2_500_000, snap: { symbol: "TRMPL", name: "Trumplet", decimals: 6, price: 0.0000025, liq: 293, holders: 262, launchpad: "pump.fun" } },
-  { mint: "DpgWwZ8WKEg8moFwfRAsNEhL51qyJhomBAkuEg2Vpump", amount: 31_500_000, snap: { symbol: "GMTRUMP", name: "Good Morning Trump", decimals: 6, price: 0.0000023, liq: 143, holders: 213, launchpad: "pump.fun" } },
-  { mint: "CYhrq39zMEV8GGuqE9hf5VUZzavA9DYFvtSYYwaZpump", amount: 9_999_999, snap: { symbol: "FROGYO", name: "frogyo", decimals: 6, price: 0.0000026, liq: 272, holders: 91, launchpad: "pump.fun" } },
+  // The dead: under $500 of liquidity on Jupiter and on DexScreener alike.
+  { mint: "DcsjML99TfewNHnarcWX37drBZerR4jSzorzeSwLpump", amount: 4_812_330, snap: { symbol: "TRMPL", name: "Trumplet", decimals: 6, price: 0.0000025, liq: 291, holders: 262, launchpad: "pump.fun" } },
+  { mint: "DpgWwZ8WKEg8moFwfRAsNEhL51qyJhomBAkuEg2Vpump", amount: 12_090_441, snap: { symbol: "GMTRUMP", name: "Good Morning Trump", decimals: 6, price: 0.0000023, liq: 143, holders: 213, launchpad: "pump.fun" } },
+  { mint: "4YqbggbpvRKyZuQEXx8RNegF7nZ9pabRSw8uhz7Zpump", amount: 2_500_000, snap: { symbol: "BSI", name: "Baby Super Inu", decimals: 6, price: 0.0000027, liq: 274, holders: 63, launchpad: "pump.fun" } },
+  { mint: "7Ec96FykXSLSEqHjbU5q7pzELdUgYN74PKFRJfgVAKF", amount: 880_120, snap: { symbol: "CAT2", name: "SOL CAT 2", decimals: 6, price: null, liq: null, holders: 129 } },
+  { mint: "Ek2w8psUa86FZ18i5YiGEASdefAbkQXsPWMHFP28pump", amount: 9_999_999, snap: { symbol: "PEPE", name: "FIRST PEPE THE FROG", decimals: 6, price: null, liq: null, holders: 48, launchpad: "pump.fun" } },
   // Dust: a real, deep token, but only crumbs of it.
   { mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", amount: 2_000, snap: { symbol: "Bonk", name: "Bonk", decimals: 5, price: 0.0000037, liq: 6_113_955, holders: 1_026_207 } },
   // Empty plots: the account is still open, the tokens long gone.

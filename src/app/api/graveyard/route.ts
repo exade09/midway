@@ -12,10 +12,10 @@ export async function GET(req: NextRequest) {
 function demo(): GraveyardData {
   // The demo lot's dead tokens are real (see lib/demo); the mourners and their losses are made up.
   const rows: [string, string, number][] = [
-    ["shiba/acc", "9fQ2…aZk1", 412], ["SUPERPIG", "3mTx…w8Lp", 88], ["ELONB", "Bv7r…2nQe", 1_240],
-    ["TRMPL", "Hk2P…9sYd", 63], ["GMTRUMP", "6pWn…tR4c", 230], ["FROGYO", "Zc1q…Fm7a", 19],
-    ["Fartcoin", "Ty6u…pK0s", 0], ["SUPERPIG", "Qa8e…Lx3v", 507], ["ELONB", "Mn4b…Ue2h", 76],
-    ["shiba/acc", "Rr3k…Vb9n", 2_310], ["TRMPL", "Lp0w…Ae5t", 145], ["GOAT", "Wq7c…Jh2m", 0],
+    ["TRMPL", "9fQ2…aZk1", 412], ["GMTRUMP", "3mTx…w8Lp", 88], ["BSI", "Bv7r…2nQe", 1_240],
+    ["CAT2", "Hk2P…9sYd", 63], ["PEPE", "6pWn…tR4c", 230], ["TRMPL", "Zc1q…Fm7a", 19],
+    ["Fartcoin", "Ty6u…pK0s", 0], ["GMTRUMP", "Qa8e…Lx3v", 507], ["BSI", "Mn4b…Ue2h", 76],
+    ["PEPE", "Rr3k…Vb9n", 2_310], ["CAT2", "Lp0w…Ae5t", 145], ["GOAT", "Wq7c…Jh2m", 0],
   ];
   const recent = rows.map(([symbol, owner, loss], i) => ({
     sig: "demo" + i, owner, mint: "demo" + symbol, symbol, name: symbol, rentLamports: 2_039_280,

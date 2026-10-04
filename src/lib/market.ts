@@ -1,6 +1,6 @@
 import "server-only";
 import type { TokenMarket, WindowStats } from "./types";
-import { WSOL } from "./config";
+import { DEAD_LIQUIDITY_USD, WSOL } from "./config";
 
 const JUP = "https://lite-api.jup.ag";
 
@@ -111,17 +111,28 @@ export async function markets(mints: string[]): Promise<Map<string, TokenMarket>
   );
   for (const batch of jupBatches) for (const t of batch ?? []) if (uniq.includes(t.id)) out.set(t.id, fromJup(t));
 
+  // DexScreener fills in what Jupiter has forgotten, and gets a second say on anything Jupiter calls dead:
+  // Jupiter counts only the pools it routes through, so a token it sees at $35 can still have $6k elsewhere,
+  // and a live token must never be offered for burial.
   const missing = uniq.filter((m) => !out.has(m));
+  const thin = uniq.filter((m) => out.has(m) && (out.get(m)!.liquidityUsd ?? 0) < DEAD_LIQUIDITY_USD);
+  const ask = [...missing, ...thin];
   const dexBatches = await Promise.all(
-    chunk(missing, 30).map((b) => getJson<DexPair[]>(`https://api.dexscreener.com/tokens/v1/solana/${b.join(",")}`)),
+    chunk(ask, 30).map((b) => getJson<DexPair[]>(`https://api.dexscreener.com/tokens/v1/solana/${b.join(",")}`)),
   );
   const byMint = new Map<string, DexPair[]>();
   for (const batch of dexBatches)
     for (const p of batch ?? []) {
       const k = p.baseToken?.address;
-      if (k && missing.includes(k)) byMint.set(k, [...(byMint.get(k) ?? []), p]);
+      if (k && ask.includes(k)) byMint.set(k, [...(byMint.get(k) ?? []), p]);
     }
-  for (const [m, ps] of byMint) out.set(m, fromDex(m, ps));
+  for (const [m, ps] of byMint) {
+    const dex = fromDex(m, ps);
+    const jup = out.get(m);
+    if (!jup) out.set(m, dex);
+    else if ((dex.liquidityUsd ?? 0) > (jup.liquidityUsd ?? 0))
+      out.set(m, { ...jup, liquidityUsd: dex.liquidityUsd, priceUsd: jup.priceUsd ?? dex.priceUsd });
+  }
 
   return out;
 }

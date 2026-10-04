@@ -3,7 +3,7 @@
 export const LAMPORTS = 1_000_000_000;
 
 /** Wallet that receives the pot cut and pays the nightly winner. */
-export const POT_WALLET = process.env.NEXT_PUBLIC_POT_WALLET ?? "";
+export const POT_WALLET = (process.env.NEXT_PUBLIC_POT_WALLET || "2nsW7FdJcvj7v65KtmjssEa54MoxMZBRsJc5PwPWCRgX").trim();
 
 /** Share of reclaimed rent that goes into tonight's pot, in basis points (500 = 5%). */
 export const POT_CUT_BPS = Number(process.env.NEXT_PUBLIC_POT_CUT_BPS ?? 500);
@@ -52,7 +52,7 @@ export const X_HANDLE = "midwaylot";
 export const X_URL = "https://x.com/midwaylot";
 
 /** The Midway token. Empty until launch — the header shows "soon" instead of an address. */
-export const TOKEN_CA = (process.env.NEXT_PUBLIC_TOKEN_CA ?? "").trim();
+export const TOKEN_CA = (process.env.NEXT_PUBLIC_TOKEN_CA || "Gs3P4eVazXGQjivijAgnRjMkm7vD2HR3LBRzGCNzpump").trim();
 
 /** Server-side RPC. Helius when a key is present, public mainnet otherwise. */
 export function rpcUrl(): string {
