@@ -44,14 +44,13 @@ export const PROTECTED_MINTS = new Set<string>([
   "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn", // PUMP
 ]);
 
-/** Public origin. Falls back to Vercel's production domain, then localhost. */
+/** Public origin for links, share cards and the sitemap: the env var, else midway.monster on Vercel, else localhost. */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+  process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL ? "https://www.midway.monster" : "http://localhost:3000");
 export const X_HANDLE = "midwaylot";
 export const X_URL = "https://x.com/midwaylot";
 
-/** The Midway token. Empty until launch — the header shows "soon" instead of an address. */
+/** The $MIDWAY token, shown and copyable in the header. NEXT_PUBLIC_TOKEN_CA overrides it. */
 export const TOKEN_CA = (process.env.NEXT_PUBLIC_TOKEN_CA || "Gs3P4eVazXGQjivijAgnRjMkm7vD2HR3LBRzGCNzpump").trim();
 
 /** Server-side RPC. Helius when a key is present, public mainnet otherwise. */
