@@ -263,7 +263,18 @@ class FileStore implements Store {
 }
 
 /** Vercel's Neon integration exposes DATABASE_URL; older Postgres integrations used POSTGRES_URL. */
-export const databaseUrl = () => process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+/**
+ * Which env var holds the Postgres URL. Vercel's Neon integration may add a prefix of its own
+ * (STORAGE_DATABASE_URL, NEON_DATABASE_URL…), so the plain names come first, then any *_DATABASE_URL / *_POSTGRES_URL.
+ */
+export function databaseEnvName(): string | null {
+  for (const k of ["DATABASE_URL", "POSTGRES_URL"]) if (process.env[k]) return k;
+  return Object.keys(process.env).find((k) => /_(DATABASE_URL|POSTGRES_URL)$/.test(k) && process.env[k]) ?? null;
+}
+export const databaseUrl = () => {
+  const k = databaseEnvName();
+  return k ? process.env[k]! : "";
+};
 
 let store: Store | null = null;
 export function getStore(): Store {

@@ -1,4 +1,4 @@
-import { databaseUrl } from "@/lib/store";
+import { databaseEnvName, databaseUrl } from "@/lib/store";
 import { POT_WALLET, POT_CUT_BPS, DRAW_HOUR_UTC, TOKEN_CA, SITE_URL } from "@/lib/config";
 import { closesAt, epochOf } from "@/lib/epoch";
 
@@ -21,6 +21,8 @@ export async function GET() {
     ok: required,
     checks,
     config: { siteUrl: SITE_URL, potCutBps: POT_CUT_BPS, drawHourUtc: DRAW_HOUR_UTC, nextDraw: new Date(closesAt(epochOf())).toISOString() },
+    // Names only, never values: which variable the database was found under, and which candidates exist.
+    database: { using: databaseEnvName(), seen: Object.keys(process.env).filter((k) => /DATABASE|POSTGRES|NEON|^PG/.test(k)).sort() },
     region: process.env.VERCEL_REGION ?? null,
     commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
   });
